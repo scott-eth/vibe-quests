@@ -940,7 +940,7 @@ const rewardsData = [
   { 
     milestone: 46, 
     title: 'Grand Prize', 
-    description: 'Trip to Ethereum DevCon + $1000 USDC', 
+          description: 'Trip to Ethereum Devconnect ARG + $1000 USDC', 
     icon: '🎁',
     image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=200&auto=format&fit=crop'
   }
@@ -1288,7 +1288,7 @@ const Quests: React.FC = () => {
     const showcaseTotal = showcaseQuestSections.reduce((total, section) => total + section.quests.length, 0)
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24 overflow-x-hidden">
         {/* Hero Image Header */}
         <div className="relative h-[200px] w-full">
           <div 
@@ -1342,7 +1342,7 @@ const Quests: React.FC = () => {
     const totalOnboardingQuests = onboardingQuests.length
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 pb-24">
         {/* Header with back button */}
         <div className="bg-background/95 backdrop-blur-sm border-b">
           <div className="max-w-4xl mx-auto p-4">
@@ -1433,7 +1433,7 @@ const Quests: React.FC = () => {
     }))
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-24 overflow-x-hidden">
         {/* Header with back button */}
         <div className="bg-background border-b">
           <div className="max-w-6xl mx-auto p-4">
