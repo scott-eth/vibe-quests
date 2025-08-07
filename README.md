@@ -1,4 +1,4 @@
-# Devconnect ARG - Ethereum World's Fair App
+# Vibe Event Prototype
 
 A comprehensive full-stack application for the Ethereum World's Fair in Buenos Aires, featuring a complete onboarding flow, event management, quest system, wallet integration, and user experience designed for the Ethereum developer community.
 
