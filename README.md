@@ -1,6 +1,6 @@
 # Vibe Event Prototype
 
-A comprehensive full-stack application for the Ethereum World's Fair in Buenos Aires, featuring a complete onboarding flow, event management, quest system, wallet integration, and user experience designed for the Ethereum developer community.
+A vibe coded prototype of the potential next version of the PWA.
 
 ## Frontend Stack
 - **React 18** with TypeScript
