@@ -430,11 +430,12 @@ function App() {
 
   // Get step info for progress tracking
   const getStepInfo = () => {
-    const stepMap = {
+    const stepMap: Record<OnboardingStep, { step: number; title: string; canGoBack: boolean }> = {
       'auth': { step: 1, title: 'Welcome', canGoBack: false },
       'event-overview': { step: 1, title: 'Event Overview', canGoBack: true },
       'experience-level': { step: 2, title: 'Experience Level', canGoBack: true },
-      'ticket-verification': { step: 3, title: 'Verify Ticket', canGoBack: true }
+      'ticket-verification': { step: 3, title: 'Verify Ticket', canGoBack: true },
+      'complete': { step: 4, title: 'Complete', canGoBack: false }
     }
     return stepMap[onboardingStep] || stepMap['auth']
   }
