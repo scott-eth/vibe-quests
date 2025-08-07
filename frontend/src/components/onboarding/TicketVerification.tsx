@@ -19,7 +19,6 @@ interface TicketVerificationProps {
 }
 
 const TicketVerification: React.FC<TicketVerificationProps> = ({ onComplete, onSkip, stepInfo, onBack }) => {
-  const [selectedMethod, setSelectedMethod] = useState<'zupass' | 'email' | null>('email')
   const [isVerifying, setIsVerifying] = useState(false)
   const [email, setEmail] = useState('')
   const [isValidEmail, setIsValidEmail] = useState(false)
