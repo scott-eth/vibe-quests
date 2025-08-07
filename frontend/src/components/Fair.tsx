@@ -159,7 +159,7 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
   const todaysEvents = getTodaysEvents()
 
   return (
-    <div className="min-h-screen bg-background pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-20">
       {/* Event Info Header - Auto-scrolling */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 overflow-hidden relative">
         <div className="flex gap-8 animate-scroll whitespace-nowrap">

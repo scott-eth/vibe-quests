@@ -73,6 +73,6 @@
     @apply border-border;
   }
   html, body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply bg-background text-foreground;
   }
 }

@@ -1288,7 +1288,7 @@ const Quests: React.FC = () => {
     const showcaseTotal = showcaseQuestSections.reduce((total, section) => total + section.quests.length, 0)
 
     return (
-      <div className="min-h-screen bg-background pb-24 overflow-x-hidden">
+      <div className="min-h-screen bg-background pb-24">
         {/* Hero Image Header */}
         <div className="relative h-[200px] w-full">
           <div 
@@ -1365,21 +1365,45 @@ const Quests: React.FC = () => {
           </div>
         </div>
 
-        {/* Sticky Progress Bar */}
+        {/* Sticky Progress Summary */}
         <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 py-3">
           <div className="max-w-4xl mx-auto px-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl font-bold text-gray-900">{completedOnboardingQuests}</div>
-                <div>
-                  <div className="text-sm font-semibold text-gray-700">of {totalOnboardingQuests} quests</div>
-                  <div className="text-xs text-gray-500">completed</div>
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100">
+              <div className="flex items-center justify-between">
+                {/* Left side - Progress Info */}
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl font-bold text-gray-900">{completedOnboardingQuests}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-gray-700">of {totalOnboardingQuests} quests</div>
+                    <div className="text-xs text-gray-500">completed</div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-purple-600">Onboarding Progress</div>
-                <div className="text-xs text-gray-500">
-                  {completedOnboardingQuests === totalOnboardingQuests ? 'Ready to spin!' : `${totalOnboardingQuests - completedOnboardingQuests} more to go`}
+
+                {/* Right side - Prize Wheel Info */}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-gray-600">
+                      {completedOnboardingQuests === totalOnboardingQuests ? 'Prize unlocked!' : 'Complete all for'}
+                    </div>
+                    <div className="font-semibold text-sm text-gray-900">Prize Wheel</div>
+                    <div className="text-xs text-gray-500">
+                      {completedOnboardingQuests === totalOnboardingQuests ? 'Ready to spin!' : `${totalOnboardingQuests - completedOnboardingQuests} more to go`}
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl border-2 shadow-md ${
+                      completedOnboardingQuests === totalOnboardingQuests 
+                        ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 border-yellow-300 animate-pulse' 
+                        : 'bg-gray-100 border-gray-200'
+                    }`}>
+                      🎊
+                    </div>
+                    {completedOnboardingQuests === totalOnboardingQuests && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        ✓
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1433,7 +1457,7 @@ const Quests: React.FC = () => {
     }))
 
     return (
-      <div className="min-h-screen bg-background pb-24 overflow-x-hidden">
+      <div className="min-h-screen bg-background pb-24">
         {/* Header with back button */}
         <div className="bg-background border-b">
           <div className="max-w-6xl mx-auto p-4">

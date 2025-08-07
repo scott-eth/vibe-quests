@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { ChevronLeft, ChevronRight, Users, MapPin, Calendar, ArrowLeft, ArrowRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+
 import OnboardingHeader from './OnboardingHeader'
 
 interface StepInfo {
@@ -25,11 +25,7 @@ const EventOverview: React.FC<EventOverviewProps> = ({ onComplete, stepInfo, onB
   const [isTransitioning, setIsTransitioning] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
-  const eventInfo = [
-    { icon: Calendar, label: "Nov 17–22, 2025", subtitle: "6 Days" },
-    { icon: MapPin, label: "Buenos Aires, Argentina", subtitle: "+ Virtual" },
-    { icon: Users, label: "15,000+ Attendees", subtitle: "Worldwide" }
-  ]
+
 
   const slides = [
     {
@@ -103,7 +99,7 @@ const EventOverview: React.FC<EventOverviewProps> = ({ onComplete, stepInfo, onB
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       <OnboardingHeader
         currentStep={stepInfo.step}
         totalSteps={stepInfo.totalSteps}
@@ -112,28 +108,47 @@ const EventOverview: React.FC<EventOverviewProps> = ({ onComplete, stepInfo, onB
         canGoBack={stepInfo.canGoBack}
       />
       
-      {/* Event Info Header - Auto-scrolling */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 overflow-hidden relative">
-        <div className="flex gap-8 animate-scroll whitespace-nowrap">
-          {/* Triple the items for seamless infinite loop */}
-          {[...eventInfo, ...eventInfo, ...eventInfo].map((info, index) => (
-            <div key={index} className="flex items-center gap-3 flex-shrink-0 px-6">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <info.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{info.label}</p>
-                <p className="text-xs text-white/80">{info.subtitle}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Main Content - Takes remaining height */}
       <div className="flex-1 flex flex-col justify-center px-4 py-8">
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full justify-center">
-          {/* Progress Indicators & Swipe Hint */}
+          {/* Main Content - No Card */}
+          <div 
+            ref={cardRef}
+            className={`overflow-hidden flex-1 flex flex-col cursor-grab active:cursor-grabbing select-none ${
+              isTransitioning ? 'opacity-95 scale-[0.99]' : 'opacity-100 scale-100'
+            } transition-all duration-300 ease-out`}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <div className="relative flex-1 flex flex-col">
+              {/* Image */}
+              <div className="relative h-48 overflow-hidden rounded-xl mb-6">
+                <img
+                  src={slides[currentSlide].image}
+                  alt={slides[currentSlide].title}
+                  className="w-full h-full object-cover transition-all duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              </div>
+
+              {/* Content */}
+              <div className="p-6 flex-1 flex flex-col justify-center">
+                <div className="text-center space-y-3">
+                  <h1 className="text-xl font-bold text-gray-900">
+                    {slides[currentSlide].title}
+                  </h1>
+                  <p className="text-sm text-gray-600 leading-relaxed max-w-lg mx-auto">
+                    {slides[currentSlide].body}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Indicators & Swipe Hint - Moved to bottom */}
           <div className="flex flex-col items-center mb-8 space-y-3">
             <div className="flex gap-2">
               {slides.map((_, index) => (
@@ -158,41 +173,6 @@ const EventOverview: React.FC<EventOverviewProps> = ({ onComplete, stepInfo, onB
               </div>
             )}
           </div>
-
-          {/* Main Content Card */}
-          <Card 
-            ref={cardRef}
-            className={`overflow-hidden flex-1 flex flex-col cursor-grab active:cursor-grabbing select-none ${
-              isTransitioning ? 'opacity-95 scale-[0.99]' : 'opacity-100 scale-100'
-            } transition-all duration-300 ease-out`}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            <div className="relative flex-1 flex flex-col">
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={slides[currentSlide].image}
-                  alt={slides[currentSlide].title}
-                  className="w-full h-full object-cover transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              </div>
-
-              {/* Content */}
-              <CardContent className="p-6 flex-1 flex flex-col justify-center">
-                <div className="text-center space-y-3">
-                  <h1 className="text-xl font-bold text-gray-900">
-                    {slides[currentSlide].title}
-                  </h1>
-                  <p className="text-sm text-gray-600 leading-relaxed max-w-lg mx-auto">
-                    {slides[currentSlide].body}
-                  </p>
-                </div>
-              </CardContent>
-            </div>
-          </Card>
         </div>
       </div>
 

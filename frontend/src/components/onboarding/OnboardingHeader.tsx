@@ -43,9 +43,6 @@ const OnboardingHeader: React.FC<OnboardingHeaderProps> = ({
           </div>
           
           <div className="flex-1 flex justify-end">
-            <div className="text-sm text-gray-500 font-medium">
-              {currentStep} of {totalSteps}
-            </div>
           </div>
         </div>
 

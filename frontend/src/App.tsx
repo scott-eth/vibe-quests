@@ -233,7 +233,7 @@ function App() {
   ]
 
   const HomePage = () => (
-    <div className="min-h-screen bg-background pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-20">
       {/* Hero Section with Welcome */}
       <div className="relative bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
@@ -518,7 +518,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background">
       {/* Page Content */}
       {renderCurrentPage()}
       

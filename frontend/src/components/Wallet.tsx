@@ -773,7 +773,7 @@ const WalletComponent: React.FC = () => {
 
   // Main render function with navigation
   return (
-    <div className="min-h-screen bg-background pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         {/* User Info Section */}

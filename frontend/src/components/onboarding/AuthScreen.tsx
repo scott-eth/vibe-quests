@@ -112,7 +112,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onComplete, onSkip }) => {
               <div className="w-full border-t border-white/20" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 text-white/80 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+              <span className="px-2 text-white/80 bg-transparent">
                 or
               </span>
             </div>

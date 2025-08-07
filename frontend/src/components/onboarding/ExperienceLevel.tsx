@@ -31,7 +31,7 @@ const ExperienceLevel: React.FC<ExperienceLevelProps> = ({ onComplete, stepInfo,
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       <OnboardingHeader
         currentStep={stepInfo.step}
         totalSteps={stepInfo.totalSteps}

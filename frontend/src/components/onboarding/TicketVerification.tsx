@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Ticket, Mail, Shield, Check, Loader2, QrCode } from 'lucide-react'
+import { Ticket, Mail, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import OnboardingHeader from './OnboardingHeader'
@@ -19,7 +19,7 @@ interface TicketVerificationProps {
 }
 
 const TicketVerification: React.FC<TicketVerificationProps> = ({ onComplete, onSkip, stepInfo, onBack }) => {
-  const [selectedMethod, setSelectedMethod] = useState<'zupass' | 'email' | null>(null)
+  const [selectedMethod, setSelectedMethod] = useState<'zupass' | 'email' | null>('email')
   const [isVerifying, setIsVerifying] = useState(false)
   const [email, setEmail] = useState('')
   const [isValidEmail, setIsValidEmail] = useState(false)
@@ -48,7 +48,7 @@ const TicketVerification: React.FC<TicketVerificationProps> = ({ onComplete, onS
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       <OnboardingHeader
         currentStep={stepInfo.step}
         totalSteps={stepInfo.totalSteps}
@@ -74,91 +74,13 @@ const TicketVerification: React.FC<TicketVerificationProps> = ({ onComplete, onS
 
           {/* Verification Methods */}
           <div className="space-y-4 mb-8">
-          {/* Zupass Option */}
+          {/* Email Option - Default Open */}
           <Card 
-            className={`cursor-pointer transition-all duration-200 border-2 ${
-              selectedMethod === 'zupass' 
-                ? 'border-purple-500 bg-purple-50 shadow-md' 
-                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-            }`}
-            onClick={() => setSelectedMethod('zupass')}
+            className="border-2 border-blue-500 bg-blue-50 shadow-md"
           >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg transition-colors ${
-                  selectedMethod === 'zupass' 
-                    ? 'bg-purple-500 text-white' 
-                    : 'bg-purple-100 text-purple-600'
-                }`}>
-                  <QrCode className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    Verify with Zupass
-                    <Shield className="h-5 w-5 text-green-500" />
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    Generate a proof using Zupass for instant, cryptographic verification
-                  </CardDescription>
-                </div>
-                {selectedMethod === 'zupass' && (
-                  <Check className="h-6 w-6 text-green-500" />
-                )}
-              </div>
-            </CardHeader>
-            {selectedMethod === 'zupass' && (
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Shield className="h-5 w-5 text-purple-600 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-purple-800">Secure & Private</p>
-                        <p className="text-sm text-purple-600">
-                          Zero-knowledge proof verification without exposing personal data
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => handleVerification('zupass')}
-                    disabled={isVerifying}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isVerifying ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Verifying with Zupass...
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="h-4 w-4 mr-2" />
-                        Verify with Zupass
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-
-          {/* Email Option */}
-          <Card 
-            className={`cursor-pointer transition-all duration-200 border-2 ${
-              selectedMethod === 'email' 
-                ? 'border-blue-500 bg-blue-50 shadow-md' 
-                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-            }`}
-            onClick={() => setSelectedMethod('email')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg transition-colors ${
-                  selectedMethod === 'email' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-blue-100 text-blue-600'
-                }`}>
+                <div className="p-3 rounded-lg bg-blue-500 text-white">
                   <Mail className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
@@ -167,65 +89,61 @@ const TicketVerification: React.FC<TicketVerificationProps> = ({ onComplete, onS
                     Enter the email address used for your Devconnect ARG registration
                   </CardDescription>
                 </div>
-                {selectedMethod === 'email' && (
-                  <Check className="h-6 w-6 text-green-500" />
-                )}
+                <Check className="h-6 w-6 text-green-500" />
               </div>
             </CardHeader>
-            {selectedMethod === 'email' && (
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Devconnect ARG Registration Email
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="email"
-                        placeholder="Enter your registration email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                      />
-                      {isValidEmail && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <Check className="h-5 w-5 text-green-500" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-blue-800">Email Verification</p>
-                        <p className="text-sm text-blue-600">
-                          We'll check this email against our Devconnect ARG registration records
-                        </p>
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Devconnect ARG Registration Email
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      placeholder="Enter your registration email"
+                      value={email}
+                      onChange={handleEmailChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                    {isValidEmail && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Check className="h-5 w-5 text-green-500" />
                       </div>
+                    )}
+                  </div>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Email Verification</p>
+                      <p className="text-sm text-blue-600">
+                        We'll check this email against our Devconnect ARG registration records
+                      </p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={() => handleVerification('email')}
-                    disabled={!isValidEmail || isVerifying}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isVerifying ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Verifying Email...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Verify Email
-                      </>
-                    )}
-                  </Button>
                 </div>
-              </CardContent>
-            )}
+                <Button 
+                  onClick={() => handleVerification('email')}
+                  disabled={!isValidEmail || isVerifying}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Verifying Email...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Verify Email
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
           </Card>
         </div>
 
