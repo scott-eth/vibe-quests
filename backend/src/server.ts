@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 })
 
 // 404 handler for unmatched routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',

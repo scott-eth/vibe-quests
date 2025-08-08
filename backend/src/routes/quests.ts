@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { dataStore } from '../data/store'
-import { AuthRequest, authenticateToken } from '../middleware/auth'
+import { authenticateToken } from '../middleware/auth'
 import { validateBody } from '../utils/validation'
 import { questProgressSchema } from '../utils/validation'
-import { ApiResponse } from '../types'
+import { ApiResponse, AuthRequest } from '../types'
 
 const router = Router()
 

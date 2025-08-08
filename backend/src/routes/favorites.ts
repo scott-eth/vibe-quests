@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { dataStore } from '../data/store'
-import { AuthRequest, authenticateToken } from '../middleware/auth'
-import { ApiResponse } from '../types'
+import { authenticateToken } from '../middleware/auth'
+import { ApiResponse, AuthRequest } from '../types'
 
 const router = Router()
 

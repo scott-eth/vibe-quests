@@ -49,7 +49,7 @@ const Schedule: React.FC<ScheduleProps> = ({ onNavigateBack, favoriteEvents = ne
       textColor: "text-blue-700",
       badges: ["TALKS", "PRESENTATION"],
       span: 1,
-      startDay: 1
+      startDay: 0
     },
     {
       id: 3,

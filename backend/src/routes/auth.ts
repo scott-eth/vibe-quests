@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { dataStore } from '../data/store'
-import { generateToken, AuthRequest, authenticateToken } from '../middleware/auth'
+import { generateToken, authenticateToken } from '../middleware/auth'
 import { validateBody } from '../utils/validation'
 import { authRequestSchema, updateProfileSchema } from '../utils/validation'
-import { ApiResponse, LoginResponse } from '../types'
+import { ApiResponse, LoginResponse, AuthRequest } from '../types'
 
 const router = Router()
 
@@ -92,6 +92,13 @@ router.post('/login', validateBody(authRequestSchema), async (req: AuthRequest, 
 router.get('/me', authenticateToken, (req: AuthRequest, res) => {
   const user = req.user
   
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: 'User not found'
+    } as ApiResponse)
+  }
+  
   res.json({
     success: true,
     data: {
@@ -118,6 +125,13 @@ router.put('/profile', authenticateToken, validateBody(updateProfileSchema), (re
 
     // Calculate profile completeness
     const user = req.user
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      } as ApiResponse)
+    }
+    
     let completeness = 25 // Base for having an account
     
     if (user.email || user.walletAddress) completeness += 25
@@ -179,6 +193,13 @@ router.post('/verify-ticket', authenticateToken, (req: AuthRequest, res) => {
 
     // In a real app, this would verify with Zupass or send email verification
     // For now, we'll simulate successful verification
+    if (!req.user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      } as ApiResponse)
+    }
+    
     const updatedUser = dataStore.updateUser(userId, {
       ticketVerified: true,
       ticketVerificationMethod: method,

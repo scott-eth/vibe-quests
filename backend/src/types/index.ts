@@ -1,3 +1,5 @@
+import { Request } from 'express'
+
 // User and Authentication Types
 export interface User {
   id: string
@@ -14,10 +16,17 @@ export interface User {
   updatedAt: Date
 }
 
-export interface AuthRequest {
+export interface AuthRequestBody {
   email?: string
   walletAddress?: string
   method: 'email' | 'wallet'
+}
+
+export interface AuthRequest extends Request {
+  userId?: string
+  user?: User
+  validatedBody?: any
+  validatedQuery?: any
 }
 
 // Event Types

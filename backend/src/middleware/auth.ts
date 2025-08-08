@@ -1,13 +1,9 @@
 import jwt from 'jsonwebtoken'
-import { Request, Response, NextFunction } from 'express'
+import { Response, NextFunction } from 'express'
 import { dataStore } from '../data/store'
+import { AuthRequest } from '../types'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devconnect-arg-secret-key-2025'
-
-export interface AuthRequest extends Request {
-  userId?: string
-  user?: any
-}
 
 export const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' })

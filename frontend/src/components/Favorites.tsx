@@ -65,7 +65,7 @@ const Favorites: React.FC<FavoritesProps> = ({ onNavigateBack, favoriteEvents, t
       textColor: "text-blue-700",
       badges: ["TALKS", "PRESENTATION"],
       span: 1,
-      startDay: 1
+      startDay: 0
     },
     {
       id: 3,

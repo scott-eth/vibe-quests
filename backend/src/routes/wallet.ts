@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { dataStore } from '../data/store'
-import { AuthRequest, authenticateToken } from '../middleware/auth'
-import { ApiResponse } from '../types'
+import { authenticateToken } from '../middleware/auth'
+import { ApiResponse, AuthRequest } from '../types'
 
 const router = Router()
 
@@ -11,6 +11,13 @@ router.get('/', authenticateToken, (req: AuthRequest, res) => {
   try {
     const userId = req.userId!
     const user = req.user
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      } as ApiResponse)
+    }
     
     if (!user.walletAddress) {
       return res.status(400).json({
@@ -146,6 +153,12 @@ router.post('/rewards', authenticateToken, (req: AuthRequest, res) => {
     
     if (!wallet) {
       const user = req.user
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        } as ApiResponse)
+      }
       if (!user.walletAddress) {
         return res.status(400).json({
           success: false,

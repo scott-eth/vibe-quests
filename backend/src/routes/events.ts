@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { dataStore } from '../data/store'
-import { AuthRequest, authenticateToken, optionalAuth } from '../middleware/auth'
+import { authenticateToken, optionalAuth } from '../middleware/auth'
 import { validateQuery } from '../utils/validation'
 import { eventFilterSchema } from '../utils/validation'
-import { ApiResponse, PaginatedResponse } from '../types'
+import { ApiResponse, PaginatedResponse, AuthRequest } from '../types'
 
 const router = Router()
 
@@ -199,6 +199,53 @@ router.get('/user/schedule', authenticateToken, (req: AuthRequest, res) => {
 
   } catch (error) {
     console.error('User schedule fetch error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
+// GET /api/events/user/today - Get user's events for today
+router.get('/user/today', authenticateToken, (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!
+    const registrations = dataStore.getUserRegistrations(userId)
+    
+    // Get today's date
+    const today = new Date()
+    const todayString = today.toISOString().split('T')[0] // YYYY-MM-DD format
+    
+    const userEvents = registrations.map(reg => {
+      const event = dataStore.getEventById(reg.eventId)
+      if (!event) return null
+      
+      // For this demo, we'll consider events that are on day 0 (Monday Nov 17) as "today"
+      // In a real app, you'd check the actual event date
+      const isToday = event.startDay === 0 // Assuming Monday Nov 17 is "today"
+      
+      if (!isToday) return null
+      
+      return {
+        id: event.id,
+        time: event.time,
+        title: event.title,
+        location: event.location,
+        status: reg.status,
+        type: event.type.toLowerCase(),
+        description: event.description || `${event.type} event at ${event.location}`,
+        registrationStatus: reg.status,
+        registeredAt: reg.registeredAt
+      }
+    }).filter(event => event !== null)
+
+    res.json({
+      success: true,
+      data: userEvents
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('User today events fetch error:', error)
     res.status(500).json({
       success: false,
       error: 'Internal server error'

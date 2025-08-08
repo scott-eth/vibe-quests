@@ -247,10 +247,48 @@ class DataStore {
         textColor: "text-blue-700",
         badges: ["TALKS", "PRESENTATION"],
         span: 1,
-        startDay: 1,
+        startDay: 0, // Changed to day 0 (Monday) to match ticket section
         description: "The main Ethereum Foundation presentation day with core protocol updates",
         capacity: 2000,
         registeredCount: 1847,
+        isCommunityEvent: false,
+        isActive: true
+      },
+      {
+        id: 3,
+        title: "Opening Ceremony",
+        time: "09:00–10:00",
+        organizer: "EF TEAM",
+        location: "MAIN STAGE",
+        attendees: "5000",
+        type: "Core",
+        color: "bg-blue-100 border-blue-200",
+        textColor: "text-blue-700",
+        badges: ["PRESENTATION", "ALL WELCOME"],
+        span: 1,
+        startDay: 0,
+        description: "Opening ceremony presentation for all attendees",
+        capacity: 5000,
+        registeredCount: 4200,
+        isCommunityEvent: false,
+        isActive: true
+      },
+      {
+        id: 4,
+        title: "DeFi Workshop Series",
+        time: "14:00–17:00",
+        organizer: "AAVE TEAM",
+        location: "WORKSHOP HALL",
+        attendees: "300",
+        type: "Partner",
+        color: "bg-yellow-100 border-yellow-200",
+        textColor: "text-yellow-700",
+        badges: ["WORKSHOP", "INTERMEDIATE"],
+        span: 2,
+        startDay: 0,
+        description: "Hands-on workshop series covering DeFi protocols",
+        capacity: 300,
+        registeredCount: 247,
         isCommunityEvent: false,
         isActive: true
       },
@@ -298,6 +336,30 @@ class DataStore {
     sampleQuests.forEach(quest => {
       this.quests.set(quest.id, quest)
     })
+
+    // Initialize sample user registrations for demo
+    // In a real app, this would be done through user actions
+    const sampleUserId = 'demo-user-123'
+    this.eventRegistrations.set(sampleUserId, [
+      {
+        userId: sampleUserId,
+        eventId: 2, // Ethereum Day
+        registeredAt: new Date(),
+        status: 'registered'
+      },
+      {
+        userId: sampleUserId,
+        eventId: 3, // Opening Ceremony
+        registeredAt: new Date(),
+        status: 'registered'
+      },
+      {
+        userId: sampleUserId,
+        eventId: 4, // DeFi Workshop Series
+        registeredAt: new Date(),
+        status: 'registered'
+      }
+    ])
   }
 }
 

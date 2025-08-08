@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { Response, NextFunction } from 'express'
+import { AuthRequest } from '../types'
 
 // Auth validation schemas
 export const emailAuthSchema = z.object({
@@ -41,7 +43,7 @@ export const questProgressSchema = z.object({
 
 // Utility function to validate request body
 export const validateBody = <T>(schema: z.ZodSchema<T>) => {
-  return (req: any, res: any, next: any) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       req.validatedBody = schema.parse(req.body)
       next()
@@ -60,7 +62,7 @@ export const validateBody = <T>(schema: z.ZodSchema<T>) => {
 
 // Utility function to validate query parameters
 export const validateQuery = <T>(schema: z.ZodSchema<T>) => {
-  return (req: any, res: any, next: any) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       req.validatedQuery = schema.parse(req.query)
       next()

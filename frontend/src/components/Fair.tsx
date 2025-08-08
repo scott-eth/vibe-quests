@@ -42,7 +42,7 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
       color: "bg-blue-50",
       textColor: "text-blue-700",
       badges: ["TALKS", "PRESENTATION"],
-      startDay: 1,
+      startDay: 0,
       span: 1
     },
     {

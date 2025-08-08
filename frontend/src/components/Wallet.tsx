@@ -10,11 +10,7 @@ import {
   User,
   Settings,
   Trophy,
-  Bell,
   Shield,
-  Palette,
-  Globe,
-  LogOut,
   ChevronRight,
   Star,
   Target,
@@ -23,7 +19,10 @@ import {
   Ticket,
   ChevronDown,
   ChevronUp,
-  Calendar
+  Calendar,
+  CreditCard,
+  MapPin,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -34,6 +33,11 @@ import { Progress } from '@/components/ui/progress'
 const WalletComponent: React.FC = () => {
   const [showBalance, setShowBalance] = useState(true)
   const [activeSection, setActiveSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings'>('wallet')
+  const [qrModalOpen, setQrModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
+  const [settingsSubPage, setSettingsSubPage] = useState<string | null>(null)
+  const [previousSection, setPreviousSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings' | null>(null)
+  const [walletSubPage, setWalletSubPage] = useState<'send' | 'receive' | null>(null)
 
   // Mock user data
   const userData = {
@@ -161,7 +165,15 @@ const WalletComponent: React.FC = () => {
               <h2 className="text-xl font-bold">{userData.displayName}</h2>
               <p className="text-muted-foreground">{userData.email}</p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setPreviousSection('profile')
+                setActiveSection('settings')
+                setSettingsSubPage('edit-profile')
+              }}
+            >
               Edit Profile
             </Button>
           </div>
@@ -197,8 +209,344 @@ const WalletComponent: React.FC = () => {
     </div>
   )
 
+  // Receive Screen Component
+  const ReceiveScreen = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setWalletSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Receive Crypto</h2>
+      </div>
+
+      {/* QR Code Section */}
+      <Card className="text-center">
+        <CardHeader>
+          <CardTitle className="text-lg">Your Wallet Address</CardTitle>
+          <CardDescription>
+            Share this QR code or address to receive payments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Large QR Code */}
+          <div className="flex justify-center">
+            <div className="w-64 h-64 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="text-center">
+                <QrCode className="h-32 w-32 text-gray-400 mx-auto mb-4" />
+                <p className="text-xs text-gray-500 font-mono break-all px-4">
+                  {userData.walletAddress}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Address Display */}
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <p className="text-sm font-medium mb-2">Wallet Address</p>
+            <div className="flex items-center justify-between bg-white p-3 rounded border">
+              <p className="text-sm font-mono text-gray-700 flex-1 break-all mr-3">
+                {userData.walletAddress}
+              </p>
+              <Button variant="outline" size="sm" className="flex-shrink-0">
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </Button>
+            </div>
+          </div>
+
+          {/* Network Info */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <p className="text-sm font-medium text-blue-800">Ethereum Network</p>
+            </div>
+            <p className="text-xs text-blue-600 text-center">
+              Only send ETH and ERC-20 tokens to this address
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              Copy Address
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              Share QR
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security Notice */}
+      <Card className="border-yellow-200 bg-yellow-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800 mb-1">Security Notice</p>
+              <p className="text-xs text-yellow-700">
+                Never share your private key or recovery phrase. Only share this address to receive payments.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+  // Send Screen Component
+  const SendScreen = () => {
+    const [sendAmount, setSendAmount] = useState('')
+    const [recipientAddress, setRecipientAddress] = useState('')
+    const [selectedAsset, setSelectedAsset] = useState('ETH')
+    const [gasPrice, setGasPrice] = useState('standard')
+    const [showConfirmation, setShowConfirmation] = useState(false)
+
+    const gasPrices = {
+      slow: { price: '15', time: '5-10 min', cost: '$2.50' },
+      standard: { price: '20', time: '2-5 min', cost: '$3.20' },
+      fast: { price: '30', time: '< 2 min', cost: '$4.80' }
+    }
+
+    const handleSendTransaction = () => {
+      setShowConfirmation(true)
+    }
+
+    const confirmTransaction = () => {
+      // Transaction logic would go here
+      setShowConfirmation(false)
+      setWalletSubPage(null)
+      // Show success toast or modal
+    }
+
+    if (showConfirmation) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowConfirmation(false)}
+              className="p-2"
+            >
+              <ChevronRight className="h-4 w-4 rotate-180" />
+            </Button>
+            <h2 className="text-xl font-semibold">Confirm Transaction</h2>
+          </div>
+
+          {/* Transaction Preview */}
+          <Card className="border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-lg">Transaction Details</CardTitle>
+              <CardDescription>Review your transaction before confirming</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Sending</span>
+                  <span className="text-sm font-medium">{sendAmount} {selectedAsset}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">To</span>
+                  <span className="text-sm font-mono">{recipientAddress.slice(0, 6)}...{recipientAddress.slice(-4)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Network Fee</span>
+                  <span className="text-sm font-medium">{gasPrices[gasPrice as keyof typeof gasPrices].cost}</span>
+                </div>
+                <div className="border-t pt-3 flex justify-between">
+                  <span className="font-medium">Total</span>
+                  <span className="font-medium">{sendAmount} {selectedAsset} + {gasPrices[gasPrice as keyof typeof gasPrices].cost}</span>
+                </div>
+              </div>
+
+              {/* Security Warning */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-800 mb-1">⚠️ Transaction Warning</p>
+                    <p className="text-xs text-red-700">
+                      This transaction cannot be reversed. Please verify the recipient address carefully.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowConfirmation(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={confirmTransaction} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  Confirm & Send
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setWalletSubPage(null)}
+            className="p-2"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+          </Button>
+          <h2 className="text-xl font-semibold">Send Crypto</h2>
+        </div>
+
+        {/* Asset Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Select Asset</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedAsset === 'ETH' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                   onClick={() => setSelectedAsset('ETH')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium">ETH</p>
+                    <p className="text-sm text-gray-500">$1,247.83</p>
+                  </div>
+                </div>
+              </div>
+              <div className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedAsset === 'USDC' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                   onClick={() => setSelectedAsset('USDC')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    UC
+                  </div>
+                  <div>
+                    <p className="font-medium">USDC</p>
+                    <p className="text-sm text-gray-500">$500.00</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recipient Address */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Recipient</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Wallet Address or ENS Name</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={recipientAddress}
+                  onChange={(e) => setRecipientAddress(e.target.value)}
+                  placeholder="0x... or name.eth"
+                  className="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                />
+                <Button variant="outline" size="sm" className="px-3">
+                  <QrCode className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Amount */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Amount</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">Amount to Send</label>
+                <Button variant="ghost" size="sm" className="text-blue-600 h-auto p-0 text-sm">
+                  Max
+                </Button>
+              </div>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  value={sendAmount}
+                  onChange={(e) => setSendAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full p-3 pr-16 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                  {selectedAsset}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                ≈ ${(parseFloat(sendAmount) * (selectedAsset === 'ETH' ? 2500 : 1) || 0).toFixed(2)} USD
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gas Fee Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Network Fee</CardTitle>
+            <CardDescription>Higher fees result in faster transaction confirmation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(gasPrices).map(([speed, details]) => (
+                <div 
+                  key={speed}
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${gasPrice === speed ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  onClick={() => setGasPrice(speed)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium capitalize">{speed}</p>
+                      <p className="text-sm text-gray-500">{details.time}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{details.cost}</p>
+                      <p className="text-sm text-gray-500">{details.price} gwei</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Send Button */}
+        <Button 
+          onClick={handleSendTransaction}
+          disabled={!sendAmount || !recipientAddress}
+          className="w-full py-3 text-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+        >
+          Review Transaction
+        </Button>
+      </div>
+    )
+  }
+
   // Wallet Section Component
-  const WalletSection = () => (
+  const WalletSection = () => {
+    // Show sub-screens if selected
+    if (walletSubPage === 'send') return <SendScreen />
+    if (walletSubPage === 'receive') return <ReceiveScreen />
+
+    // Show main wallet page
+    return (
     <div className="space-y-6">
       {/* Balance Card */}
       <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
@@ -208,10 +556,6 @@ const WalletComponent: React.FC = () => {
               <p className="text-white/80 text-sm">Total Balance</p>
               <div className="text-3xl font-bold">
                 {showBalance ? `$${userData.totalRewards.toFixed(2)}` : '••••••'}
-              </div>
-              <div className="flex items-center gap-1 text-green-300 text-sm mt-1">
-                <ArrowUpRight className="h-3 w-3" />
-                +12.5% this week
               </div>
             </div>
             <Button
@@ -226,17 +570,47 @@ const WalletComponent: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-3 gap-3 mt-6">
-            <Button variant="secondary" className="flex flex-col gap-1 h-auto py-3 bg-white/20 hover:bg-white/30 text-white border-0">
+            <Button 
+              variant="secondary" 
+              className="flex flex-col gap-1 h-auto py-3 bg-white/20 hover:bg-white/30 text-white border-0"
+              onClick={() => setWalletSubPage('send')}
+            >
               <Send className="h-4 w-4" />
               <span className="text-xs">Send</span>
             </Button>
-            <Button variant="secondary" className="flex flex-col gap-1 h-auto py-3 bg-white/20 hover:bg-white/30 text-white border-0">
+            <Button 
+              variant="secondary" 
+              className="flex flex-col gap-1 h-auto py-3 bg-white/20 hover:bg-white/30 text-white border-0"
+              onClick={() => setWalletSubPage('receive')}
+            >
               <ArrowDownLeft className="h-4 w-4" />
               <span className="text-xs">Receive</span>
             </Button>
             <Button className="flex flex-col gap-1 h-auto py-3 bg-white hover:bg-white/90 text-blue-600 border-0 font-medium">
               <QrCode className="h-4 w-4" />
               <span className="text-xs">Scan QR</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Onramp Section */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="text-lg">Exchange ARS/USD for Crypto</CardTitle>
+          <CardDescription>
+            Fund your Ethereum wallet to buy discounted food and drinks at the World's Fair! There are two ways to add money to your wallet:
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <Button className="flex flex-col gap-2 h-auto py-4 bg-blue-600 hover:bg-blue-700">
+              <CreditCard className="h-5 w-5" />
+              <span className="text-sm font-medium">Exchange digitally</span>
+            </Button>
+            <Button variant="outline" className="flex flex-col gap-2 h-auto py-4">
+              <MapPin className="h-5 w-5" />
+              <span className="text-sm font-medium">Exchange in-person</span>
             </Button>
           </div>
         </CardContent>
@@ -366,6 +740,7 @@ const WalletComponent: React.FC = () => {
       </Tabs>
     </div>
   )
+  }
 
   // Collections Section Component
   const CollectionsSection = () => {
@@ -450,51 +825,122 @@ const WalletComponent: React.FC = () => {
       )
     }
 
-    // Mock event data organized by days
+    // Helper function to parse time and convert to minutes for sorting
+    const parseTimeToMinutes = (timeString: string) => {
+      const timeMatch = timeString.match(/(\d+):(\d+)\s*(AM|PM)/i)
+      if (!timeMatch) return 0
+      
+      let [, hours, minutes, period] = timeMatch
+      let totalMinutes = parseInt(hours) * 60 + parseInt(minutes)
+      
+      if (period.toUpperCase() === 'PM' && hours !== '12') {
+        totalMinutes += 12 * 60
+      } else if (period.toUpperCase() === 'AM' && hours === '12') {
+        totalMinutes -= 12 * 60
+      }
+      
+      return totalMinutes
+    }
+
+    // Helper function to sort events by start time
+    const sortEventsByTime = (events: any[]) => {
+      return [...events].sort((a, b) => {
+        const timeA = parseTimeToMinutes(a.time)
+        const timeB = parseTimeToMinutes(b.time)
+        return timeA - timeB
+      })
+    }
+
+    // Event data organized by days - matching actual calendar events
     const eventsByDay = {
       'Monday 17 Nov': [
         {
-          id: 1,
-          name: 'Opening Ceremony Reception',
-          time: '6:00 PM - 8:00 PM',
-          location: 'Main Pavilion',
-          description: 'Welcome reception with networking and keynote speakers'
+          id: 3,
+          name: 'Opening Ceremony',
+          time: '9:00 AM - 10:00 AM',
+          location: 'Main Stage',
+          description: 'Kick-off presentation with keynote speakers',
+          organizer: 'EF TEAM',
+          type: 'Core',
+          qrCode: 'QR-OPENING-CEREMONY-001'
         },
         {
           id: 2,
-          name: 'DeFi Mixer',
-          time: '8:30 PM - 11:00 PM',
-          location: 'Pavilion Verde',
-          description: 'Evening networking event for DeFi enthusiasts'
+          name: 'Ethereum Day',
+          time: '10:00 AM - 6:00 PM',
+          location: 'La Rural',
+          description: 'The main Ethereum Foundation presentation day with core protocol updates',
+          organizer: 'ETHEREUM FOUNDATION',
+          type: 'Core',
+          qrCode: 'QR-ETHEREUM-DAY-002'
+        },
+        {
+          id: 4,
+          name: 'DeFi Workshop Series',
+          time: '2:00 PM - 5:00 PM',
+          location: 'Workshop Hall',
+          description: 'Deep dive into DeFi protocols and development',
+          organizer: 'AAVE TEAM',
+          type: 'Partner',
+          qrCode: 'QR-DEFI-WORKSHOP-003'
         }
       ],
       'Tuesday 18 Nov': [
         {
-          id: 3,
-          name: 'Builders Breakfast',
-          time: '8:00 AM - 9:30 AM',
-          location: 'Centro Sur',
-          description: 'Morning networking for developers and builders'
-        }
-      ],
-      'Wednesday 19 Nov': [],
-      'Thursday 20 Nov': [
+          id: 8,
+          name: 'Layer 2 Summit',
+          time: '1:00 PM - 6:00 PM',
+          location: 'Summit Hall',
+          description: 'Comprehensive coverage of Layer 2 scaling solutions',
+          organizer: 'POLYGON TEAM',
+          type: 'Partner',
+          qrCode: 'QR-LAYER2-SUMMIT-004'
+        },
         {
-          id: 4,
-          name: 'NFT Art Gallery Opening',
-          time: '7:00 PM - 10:00 PM',
-          location: 'Galería Norte',
-          description: 'Exclusive preview of digital art exhibitions'
+          id: 7,
+          name: 'NFT Art Gallery',
+          time: '11:00 AM - 7:00 PM',
+          location: 'Gallery Space',
+          description: 'Digital art exhibitions and NFT showcases',
+          organizer: 'ART COLLECTIVE',
+          type: 'Partner',
+          qrCode: 'QR-NFT-GALLERY-005'
         }
       ],
+      'Wednesday 19 Nov': [
+        {
+          id: 5,
+          name: 'ETHCon Day Argentina',
+          time: '10:00 AM - 6:00 PM',
+          location: 'La Rural',
+          description: 'Local Ethereum community presentations and networking',
+          organizer: 'DEVCONNECT TEAM',
+          type: 'Core',
+          qrCode: 'QR-ETHCON-ARG-006'
+        },
+        {
+          id: 6,
+          name: 'zkTLS Deep Dive',
+          time: '9:30 AM - 3:00 PM',
+          location: 'Tech Pavilion',
+          description: 'Technical workshop on zero-knowledge Transport Layer Security',
+          organizer: 'EF TEAM',
+          type: 'Core',
+          qrCode: 'QR-ZKTLS-DIVE-007'
+        }
+      ],
+      'Thursday 20 Nov': [],
       'Friday 21 Nov': [],
       'Saturday 22 Nov': [
         {
-          id: 5,
-          name: 'Closing Party',
-          time: '9:00 PM - 2:00 AM',
-          location: 'Plaza Central',
-          description: 'Final celebration with live music and entertainment'
+          id: 14,
+          name: 'Closing Ceremony',
+          time: '4:00 PM - 6:00 PM',
+          location: 'Main Stage',
+          description: 'Final presentations and wrap-up celebration',
+          organizer: 'EF TEAM',
+          type: 'Core',
+          qrCode: 'QR-CLOSING-CEREMONY-013'
         }
       ]
     }
@@ -584,22 +1030,69 @@ const WalletComponent: React.FC = () => {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {events.map((event) => (
-                          <div key={event.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium text-sm">{event.name}</h4>
-                              <Badge variant="outline" className="text-xs">
-                                {event.time}
-                              </Badge>
+                        {sortEventsByTime(events).map((event) => {
+                          // Determine card styling based on event type
+                          const getCardStyling = (type: string) => {
+                            switch (type) {
+                              case 'Core':
+                                return {
+                                  cardClass: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
+                                  qrButtonClass: 'bg-white/80 hover:bg-white border-blue-300 hover:border-blue-400 text-gray-600 hover:text-gray-800'
+                                }
+                              case 'Partner':
+                                return {
+                                  cardClass: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+                                  qrButtonClass: 'bg-white/80 hover:bg-white border-yellow-300 hover:border-yellow-400 text-gray-600 hover:text-gray-800'
+                                }
+                              default:
+                                return {
+                                  cardClass: 'bg-gray-50 border-gray-200 hover:bg-gray-100',
+                                  qrButtonClass: 'bg-white/80 hover:bg-white border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800'
+                                }
+                            }
+                          }
+                          
+                          const styling = getCardStyling(event.type)
+                          
+                          return (
+                            <div key={event.id} className={`border rounded-lg p-4 transition-colors relative ${styling.cardClass}`}>
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1 pr-4">
+                                  <h4 className="font-semibold text-base mb-1 text-gray-900">{event.name}</h4>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline" className="text-xs bg-white/60 border-white/80 text-gray-700">
+                                      {event.time}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setSelectedEvent(event)
+                                    setQrModalOpen(true)
+                                  }}
+                                  className={`flex-shrink-0 min-w-[44px] h-11 rounded-lg flex items-center justify-center transition-all duration-200 group hover:shadow-sm touch-manipulation ${styling.qrButtonClass}`}
+                                  title="Tap to view QR Code"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <QrCode className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                    <span className="text-xs font-medium hidden sm:inline">QR</span>
+                                  </div>
+                                </button>
+                              </div>
+                              <p className="text-xs mb-1 text-gray-600">
+                                📍 {event.location}
+                              </p>
+                              {event.organizer && (
+                                <p className="text-xs mb-1 font-medium text-gray-600">
+                                  By {event.organizer}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                {event.description}
+                              </p>
                             </div>
-                            <p className="text-xs text-muted-foreground mb-1">
-                              📍 {event.location}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {event.description}
-                            </p>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -612,8 +1105,469 @@ const WalletComponent: React.FC = () => {
     )
   }
 
+  // Edit Profile Sub-page Component
+  const EditProfileSubPage = () => {
+    const handleBackNavigation = () => {
+      if (previousSection === 'profile') {
+        setActiveSection('profile')
+        setPreviousSection(null)
+      } else {
+        setSettingsSubPage(null)
+      }
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBackNavigation}
+            className="p-2"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+          </Button>
+          <h2 className="text-xl font-semibold">Edit Profile</h2>
+        </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Personal Information</CardTitle>
+          <CardDescription>Update your personal details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Display Name</label>
+            <input 
+              type="text" 
+              defaultValue={userData.displayName}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Full Name</label>
+            <input 
+              type="text" 
+              defaultValue={userData.name}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <input 
+              type="email" 
+              defaultValue={userData.email}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Bio</label>
+            <textarea 
+              rows={3}
+              placeholder="Tell us about yourself..."
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button className="flex-1">Save Changes</Button>
+            <Button variant="outline" onClick={handleBackNavigation}>Cancel</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+  }
+
+  // Connected Wallets Sub-page Component
+  const ConnectedWalletsSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Connected Wallets</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Active Wallets</CardTitle>
+          <CardDescription>Manage your connected cryptocurrency wallets</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="font-medium">MetaMask</p>
+                <p className="text-sm text-gray-500">{userData.walletAddress}</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Connected
+            </Badge>
+          </div>
+          <Button variant="outline" className="w-full">
+            Connect Another Wallet
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+
+
+  // Recovery Phrase Sub-page Component
+  const RecoveryPhraseSubPage = () => {
+    const [showRecoveryPhrase, setShowRecoveryPhrase] = useState(false)
+    const [isLongPressing, setIsLongPressing] = useState(false)
+    const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
+
+    const handleLongPressStart = () => {
+      setIsLongPressing(true)
+      const timer = setTimeout(() => {
+        setShowRecoveryPhrase(true)
+        setIsLongPressing(false)
+      }, 2000) // 2 second long press
+      setLongPressTimer(timer)
+    }
+
+    const handleLongPressEnd = () => {
+      setIsLongPressing(false)
+      if (longPressTimer) {
+        clearTimeout(longPressTimer)
+        setLongPressTimer(null)
+      }
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSettingsSubPage(null)}
+            className="p-2"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+          </Button>
+          <h2 className="text-xl font-semibold">Recovery Phrase</h2>
+        </div>
+
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="text-lg text-yellow-800">⚠️ Important Security Information</CardTitle>
+            <CardDescription className="text-yellow-700">
+              Your recovery phrase is the master key to your wallet. Never share it with anyone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white p-4 rounded-lg border">
+              <p className="text-sm font-medium mb-3">Your Recovery Phrase:</p>
+              {!showRecoveryPhrase ? (
+                <div className="text-center py-8">
+                  <div className="mb-4">
+                    <Shield className="h-12 w-12 text-yellow-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-4">
+                      Your recovery phrase is hidden for security
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className={`transition-all duration-200 ${
+                      isLongPressing 
+                        ? 'bg-blue-100 border-blue-400 scale-105' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onMouseDown={handleLongPressStart}
+                    onMouseUp={handleLongPressEnd}
+                    onMouseLeave={handleLongPressEnd}
+                    onTouchStart={handleLongPressStart}
+                    onTouchEnd={handleLongPressEnd}
+                  >
+                    {isLongPressing ? 'Keep holding...' : 'Hold to reveal phrase'}
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Hold for 2 seconds to show your recovery phrase
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-3 gap-2 text-xs font-mono mb-4">
+                    {['apple', 'banana', 'cherry', 'date', 'berry', 'fig', 'grape', 'honey', 'ice', 'jam', 'kiwi', 'lemon'].map((word, index) => (
+                      <div key={index} className="p-2 bg-gray-50 rounded border text-center">
+                        {index + 1}. {word}
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowRecoveryPhrase(false)}
+                    className="w-full mb-2"
+                  >
+                    Hide Recovery Phrase
+                  </Button>
+                </div>
+              )}
+            </div>
+            {showRecoveryPhrase && (
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Phrase
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  Download Backup
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Notifications Sub-page Component
+  const NotificationsSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Notifications</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Push Notifications</CardTitle>
+          <CardDescription>Manage your notification preferences</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { title: 'Event Reminders', description: 'Get notified before events start', enabled: true },
+            { title: 'Quest Updates', description: 'Notifications about new quests and completions', enabled: true },
+            { title: 'Wallet Activity', description: 'Transaction confirmations and security alerts', enabled: true },
+            { title: 'Social Updates', description: 'Friend activities and community updates', enabled: false },
+            { title: 'Marketing', description: 'Special offers and announcements', enabled: false }
+          ].map((notification, index) => (
+            <div key={index} className="flex items-center justify-between py-3 border-b last:border-b-0">
+              <div>
+                <p className="font-medium text-sm">{notification.title}</p>
+                <p className="text-xs text-gray-500">{notification.description}</p>
+              </div>
+              <div className={`w-12 h-6 rounded-full p-1 transition-colors ${notification.enabled ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                <div className={`w-4 h-4 bg-white rounded-full transition-transform ${notification.enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+  // Theme Sub-page Component
+  const ThemeSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Theme</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Appearance</CardTitle>
+          <CardDescription>Customize how the app looks</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { name: 'Light', description: 'Clean and bright interface', active: true },
+            { name: 'Dark', description: 'Easy on the eyes in low light', active: false },
+            { name: 'Auto', description: 'Matches your system setting', active: false }
+          ].map((theme, index) => (
+            <div key={index} className={`p-4 border rounded-lg cursor-pointer transition-colors ${theme.active ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{theme.name}</p>
+                  <p className="text-sm text-gray-500">{theme.description}</p>
+                </div>
+                {theme.active && <div className="w-4 h-4 bg-blue-500 rounded-full" />}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+  // Language Sub-page Component
+  const LanguageSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Language</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Select Language</CardTitle>
+          <CardDescription>Choose your preferred language</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[
+            { code: 'en', name: 'English', active: true },
+            { code: 'es', name: 'Español', active: false }
+          ].map((language, index) => (
+            <div key={index} className={`p-3 border rounded-lg cursor-pointer transition-colors ${language.active ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{language.name}</span>
+                {language.active && <div className="w-4 h-4 bg-blue-500 rounded-full" />}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+  // Disconnect Wallet Sub-page Component
+  const DisconnectWalletSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Disconnect Wallet</h2>
+      </div>
+
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="text-lg text-red-600">⚠️ Disconnect Wallet</CardTitle>
+          <CardDescription className="text-red-600">
+            This will disconnect all your connected wallets from this device.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <p className="text-sm text-red-800 font-medium mb-2">What happens when you disconnect:</p>
+            <ul className="text-sm text-red-700 space-y-1">
+              <li>• You'll need to reconnect your wallet to access funds</li>
+              <li>• Your transaction history will remain safe</li>
+              <li>• You can reconnect anytime with your wallet</li>
+            </ul>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" onClick={() => setSettingsSubPage(null)} className="flex-1">
+              Cancel
+            </Button>
+            <Button variant="destructive" className="flex-1">
+              Disconnect All Wallets
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+
+  // Delete Account Sub-page Component
+  const DeleteAccountSubPage = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSettingsSubPage(null)}
+          className="p-2"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+        </Button>
+        <h2 className="text-xl font-semibold">Delete Account</h2>
+      </div>
+
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="text-lg text-red-600">⚠️ Delete Account</CardTitle>
+          <CardDescription className="text-red-600">
+            This action cannot be undone. This will permanently delete your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <p className="text-sm text-red-800 font-medium mb-2">What will be deleted:</p>
+            <ul className="text-sm text-red-700 space-y-1">
+              <li>• Your profile and account information</li>
+              <li>• All quest progress and achievements</li>
+              <li>• Event tickets and favorites</li>
+              <li>• Transaction history and wallet connections</li>
+            </ul>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-red-600">
+              Type "DELETE" to confirm:
+            </label>
+            <input 
+              type="text" 
+              className="w-full p-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="Type DELETE here"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" onClick={() => setSettingsSubPage(null)} className="flex-1">
+              Cancel
+            </Button>
+            <Button variant="destructive" className="flex-1">
+              Delete Account
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+
   // Settings Section Component
-  const SettingsSection = () => (
+  const SettingsSection = () => {
+    // Show sub-page if one is selected
+    if (settingsSubPage === 'edit-profile') return <EditProfileSubPage />
+    if (settingsSubPage === 'connected-wallets') return <ConnectedWalletsSubPage />
+    if (settingsSubPage === 'recovery-phrase') return <RecoveryPhraseSubPage />
+    if (settingsSubPage === 'notifications') return <NotificationsSubPage />
+    if (settingsSubPage === 'theme') return <ThemeSubPage />
+    if (settingsSubPage === 'language') return <LanguageSubPage />
+    if (settingsSubPage === 'disconnect-wallet') return <DisconnectWalletSubPage />
+    if (settingsSubPage === 'delete-account') return <DeleteAccountSubPage />
+
+    // Show main settings page
+    return (
     <div className="space-y-6">
       {/* Account Settings */}
       <Card>
@@ -624,7 +1578,10 @@ const WalletComponent: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => {
+            setPreviousSection(null)
+            setSettingsSubPage('edit-profile')
+          }}>
             <div>
               <p className="font-medium text-sm">Edit Profile</p>
               <p className="text-xs text-muted-foreground">Update your name, email, and bio</p>
@@ -632,26 +1589,6 @@ const WalletComponent: React.FC = () => {
             <Button variant="ghost" size="sm">
               <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
-          
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="font-medium text-sm">Change Password</p>
-              <p className="text-xs text-muted-foreground">Update your account security</p>
-            </div>
-            <Button variant="ghost" size="sm">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="font-medium text-sm">Two-Factor Authentication</p>
-              <p className="text-xs text-muted-foreground">Add extra security to your account</p>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              Not Enabled
-            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -665,7 +1602,7 @@ const WalletComponent: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => setSettingsSubPage('connected-wallets')}>
             <div>
               <p className="font-medium text-sm">Connected Wallets</p>
               <p className="text-xs text-muted-foreground">Manage your connected wallets</p>
@@ -675,20 +1612,10 @@ const WalletComponent: React.FC = () => {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="font-medium text-sm">Transaction History</p>
-              <p className="text-xs text-muted-foreground">Export your transaction data</p>
-            </div>
-            <Button variant="ghost" size="sm">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => setSettingsSubPage('recovery-phrase')}>
             <div>
               <p className="font-medium text-sm">Recovery Phrase</p>
-              <p className="text-xs text-muted-foreground">Backup your wallet securely</p>
+              <p className="text-xs text-muted-foreground">Backup or Export your wallet keys securely</p>
             </div>
             <Button variant="ghost" size="sm">
               <ChevronRight className="h-4 w-4" />
@@ -706,33 +1633,33 @@ const WalletComponent: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => setSettingsSubPage('notifications')}>
             <div>
               <p className="font-medium text-sm">Notifications</p>
-              <p className="text-xs text-muted-foreground">Manage email and push notifications</p>
+              <p className="text-xs text-muted-foreground">Manage push notifications</p>
             </div>
             <Button variant="ghost" size="sm">
-              <Bell className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => setSettingsSubPage('theme')}>
             <div>
               <p className="font-medium text-sm">Theme</p>
               <p className="text-xs text-muted-foreground">Choose your preferred theme</p>
             </div>
             <Button variant="ghost" size="sm">
-              <Palette className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2" onClick={() => setSettingsSubPage('language')}>
             <div>
               <p className="font-medium text-sm">Language</p>
               <p className="text-xs text-muted-foreground">Select your language</p>
             </div>
             <Button variant="ghost" size="sm">
-              <Globe className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -747,29 +1674,82 @@ const WalletComponent: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-red-50 rounded-lg px-2" onClick={() => setSettingsSubPage('disconnect-wallet')}>
             <div>
               <p className="font-medium text-sm text-red-600">Disconnect Wallet</p>
               <p className="text-xs text-muted-foreground">Disconnect all connected wallets</p>
             </div>
             <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
-              <LogOut className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-2 cursor-pointer hover:bg-red-50 rounded-lg px-2" onClick={() => setSettingsSubPage('delete-account')}>
             <div>
               <p className="font-medium text-sm text-red-600">Delete Account</p>
               <p className="text-xs text-muted-foreground">Permanently delete your account</p>
             </div>
             <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
-              Delete
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
   )
+  }
+
+  // QR Modal Component
+  const QRModal = () => {
+    if (!qrModalOpen || !selectedEvent) return null
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-sm w-full p-6 relative">
+          <button
+            onClick={() => setQrModalOpen(false)}
+            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
+          
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">{selectedEvent.name}</h3>
+            <p className="text-sm text-gray-600 mb-4">{selectedEvent.time}</p>
+            
+            {/* QR Code placeholder - in a real app this would be a generated QR code */}
+            <div className="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center mb-4">
+              <div className="text-center">
+                <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-500 font-mono">{selectedEvent.qrCode}</p>
+              </div>
+            </div>
+            
+            <div className="text-left space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Location:</span>
+                <span className="font-medium">{selectedEvent.location}</span>
+              </div>
+              {selectedEvent.organizer && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Organizer:</span>
+                  <span className="font-medium">{selectedEvent.organizer}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Type:</span>
+                <span className="font-medium">{selectedEvent.type}</span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-4 text-center">
+              Show this QR code at the event entrance
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Main render function with navigation
   return (
@@ -823,6 +1803,9 @@ const WalletComponent: React.FC = () => {
         {activeSection === 'collections' && <CollectionsSection />}
         {activeSection === 'settings' && <SettingsSection />}
       </div>
+      
+      {/* QR Modal */}
+      <QRModal />
     </div>
   )
 }

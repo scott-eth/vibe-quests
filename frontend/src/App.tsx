@@ -225,12 +225,86 @@ function App() {
     }
   }
 
-  const userSignedUpEvents = [
-    { time: "10:00 AM", title: "Welcome Keynote", location: "Main Stage", status: "attending", type: "keynote" },
-    { time: "2:00 PM", title: "DeFi Deep Dive Workshop", location: "DeFi Pavilion", status: "attending", type: "workshop" },
-    { time: "4:30 PM", title: "Networking Break", location: "Community Lounge", status: "attending", type: "social" },
-    { time: "6:00 PM", title: "Closing Ceremony", location: "Main Stage", status: "attending", type: "ceremony" }
-  ]
+  // User's today events - fetched from backend
+  const [userSignedUpEvents, setUserSignedUpEvents] = useState([
+    { 
+      id: 1,
+      time: "6:00 PM", 
+      title: "Opening Ceremony Reception", 
+      location: "Main Pavilion", 
+      status: "attending", 
+      type: "reception",
+      description: "Welcome reception with networking and keynote speakers"
+    },
+    { 
+      id: 2,
+      time: "8:30 PM", 
+      title: "DeFi Mixer", 
+      location: "Pavilion Verde", 
+      status: "attending", 
+      type: "networking",
+      description: "Evening networking event for DeFi enthusiasts"
+    }
+  ])
+
+  // Fetch user's today events on component mount
+  useEffect(() => {
+    const fetchTodayEvents = async () => {
+      try {
+        // In a real app, you'd use the actual auth token
+        // For demo purposes, we'll use mock data that matches backend structure
+        const mockTodayEvents = [
+          {
+            id: 2,
+            time: "10:00–18:00",
+            title: "Ethereum Day",
+            location: "LA RURAL",
+            status: "registered",
+            type: "core",
+            description: "The main Ethereum Foundation presentation day with core protocol updates"
+          },
+          {
+            id: 3,
+            time: "09:00–10:00",
+            title: "Opening Ceremony",
+            location: "MAIN STAGE",
+            status: "registered",
+            type: "core",
+            description: "Opening ceremony presentation for all attendees"
+          },
+          {
+            id: 4,
+            time: "14:00–17:00",
+            title: "DeFi Workshop Series",
+            location: "WORKSHOP HALL",
+            status: "registered",
+            type: "partner",
+            description: "Hands-on workshop series covering DeFi protocols"
+          }
+        ]
+        
+        // Sort events by time for better timeline display
+        const sortedEvents = mockTodayEvents.sort((a, b) => {
+          // Extract hour from time string (e.g., "09:00–10:00" -> 9)
+          const getHour = (timeStr: string) => {
+            const hour = parseInt(timeStr.split(':')[0])
+            return hour
+          }
+          
+          return getHour(a.time) - getHour(b.time)
+        })
+        
+        setUserSignedUpEvents(sortedEvents)
+      } catch (error) {
+        console.error('Failed to fetch today events:', error)
+        // Keep default events on error
+      }
+    }
+
+    if (isOnboardingComplete) {
+      fetchTodayEvents()
+    }
+  }, [isOnboardingComplete])
 
   const HomePage = () => (
     <div className="min-h-screen bg-background pb-20">
@@ -258,12 +332,12 @@ function App() {
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Calendar className="h-5 w-5 text-gray-600" />
               </div>
               <div>
-                <CardTitle className="text-lg">Your schedule</CardTitle>
-                <CardDescription>Monday 17 November</CardDescription>
+                <CardTitle className="text-lg">My Devconnect schedule</CardTitle>
+                <CardDescription>Monday 17 November @ La Rural</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -273,8 +347,8 @@ function App() {
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
               
               <div className="space-y-6">
-                {userSignedUpEvents.map((event, index) => (
-                  <div key={index} className="relative flex items-start gap-4">
+                {userSignedUpEvents.map((event) => (
+                  <div key={event.id} className="relative flex items-start gap-4">
                     {/* Timeline dot */}
                     <div className="relative z-10 flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white flex-shrink-0">
                       <div className="text-xs font-bold leading-none text-center">
@@ -291,15 +365,19 @@ function App() {
                           {event.type}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{event.location}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{event.location}</p>
+                      <p className="text-xs text-muted-foreground">{event.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="pt-4 border-t mt-4">
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setCurrentPage('fair')}>
-                View All Events <ArrowRight className="h-4 w-4 ml-1" />
+            <div className="pt-4 border-t mt-4 flex gap-3">
+              <Button variant="outline" size="default" className="flex-1" onClick={() => setCurrentPage('schedule')}>
+                View Schedule <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+              <Button variant="outline" size="default" className="flex-1" onClick={() => setCurrentPage('favorites')}>
+                View favorite events <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </CardContent>
@@ -309,8 +387,8 @@ function App() {
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Trophy className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Trophy className="h-5 w-5 text-gray-600" />
               </div>
               <div>
                 <CardTitle className="text-lg">Quest Progress</CardTitle>
@@ -319,16 +397,16 @@ function App() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Onboarding Progress */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Onboarding</span>
-                  <span className="text-muted-foreground">{userData.onboardingProgress.completed}/{userData.onboardingProgress.total}</span>
+                  <span className="font-medium text-gray-900">Onboarding</span>
+                  <span className="text-muted-foreground font-medium">{userData.onboardingProgress.completed}/{userData.onboardingProgress.total}</span>
                 </div>
                 <Progress 
                   value={(userData.onboardingProgress.completed / userData.onboardingProgress.total) * 100} 
-                  className="h-2"
+                  className="h-3"
                 />
                 <p className="text-xs text-muted-foreground">Learn the basics</p>
               </div>
@@ -336,20 +414,39 @@ function App() {
               {/* App Showcase Progress */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">App Showcase</span>
-                  <span className="text-muted-foreground">{userData.showcaseProgress.completed}/{userData.showcaseProgress.total}</span>
+                  <span className="font-medium text-gray-900">App Showcase</span>
+                  <span className="text-muted-foreground font-medium">{userData.showcaseProgress.completed}/{userData.showcaseProgress.total}</span>
                 </div>
                 <Progress 
                   value={(userData.showcaseProgress.completed / userData.showcaseProgress.total) * 100} 
-                  className="h-2"
+                  className="h-3"
                 />
                 <p className="text-xs text-muted-foreground">Explore future applications</p>
               </div>
             </div>
             
+            {/* Overall Progress Summary */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-900">Overall Quest Progress</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {userData.onboardingProgress.completed + userData.showcaseProgress.completed}/
+                  {userData.onboardingProgress.total + userData.showcaseProgress.total}
+                </span>
+              </div>
+              <Progress 
+                value={((userData.onboardingProgress.completed + userData.showcaseProgress.completed) / 
+                       (userData.onboardingProgress.total + userData.showcaseProgress.total)) * 100} 
+                className="h-2 mb-2"
+              />
+              <p className="text-xs text-gray-600">
+                Complete quests to unlock exclusive rewards and prizes!
+              </p>
+            </div>
+            
             <div className="pt-4 border-t">
               <Button variant="outline" size="sm" className="w-full" onClick={() => setCurrentPage('quests')}>
-                View All <ArrowRight className="h-4 w-4 ml-1" />
+                View All Quests <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </CardContent>
@@ -361,33 +458,55 @@ function App() {
             <h2 className="text-xl font-bold mb-1">Featured</h2>
             <p className="text-muted-foreground text-sm">Discover app features and event highlights</p>
           </div>
-          
-          <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4 w-max">
-              {featuredItems.map((item, index) => (
-                <div key={index} className="relative w-80 h-48 rounded-xl overflow-hidden flex-shrink-0">
-                  <img 
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${item.color} opacity-90`} />
-                  <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                        {item.icon}
+        </div>
+        
+        {/* Featured Carousel - Full Width */}
+        <div className="-mx-6 px-6 overflow-x-auto pb-4">
+          <div className="flex gap-4 w-max">
+              {featuredItems.map((item, index) => {
+                const getNavigationPage = (title: string) => {
+                  switch (title) {
+                    case 'Quests':
+                      return 'quests'
+                    case 'World\'s Fair':
+                      return 'fair'
+                    case 'Wallet':
+                      return 'wallet'
+                    case 'Schedule':
+                      return 'schedule'
+                    default:
+                      return 'home'
+                  }
+                }
+                
+                return (
+                  <div 
+                    key={index} 
+                    className="relative w-80 h-48 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer"
+                    onClick={() => setCurrentPage(getNavigationPage(item.title))}
+                  >
+                    <img 
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${item.color} opacity-90`} />
+                    <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                          {item.icon}
+                        </div>
+                        <h3 className="text-xl font-bold">{item.title}</h3>
                       </div>
-                      <h3 className="text-xl font-bold">{item.title}</h3>
+                      <p className="text-white/90 text-sm leading-relaxed">
+                        {item.description}
+                      </p>
                     </div>
-                    <p className="text-white/90 text-sm leading-relaxed">
-                      {item.description}
-                    </p>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
-        </div>
       </div>
     </div>
   )
