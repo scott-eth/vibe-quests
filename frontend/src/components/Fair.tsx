@@ -8,9 +8,10 @@ interface FairProps {
   onNavigateToSchedule?: () => void;
   onNavigateToFavorites?: () => void;
   onEventClick?: (event: any) => void;
+  onNavigateToMap?: () => void;
 }
 
-const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites, onEventClick }) => {
+const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites, onEventClick, onNavigateToMap }) => {
   const eventInfo = [
     { icon: Calendar, label: "Nov 17–22, 2025", subtitle: "6 Days" },
     { icon: MapPin, label: "Buenos Aires, Argentina", subtitle: "+ Virtual" },
@@ -215,7 +216,11 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
             <Heart className="h-5 w-5" />
             <span className="text-sm font-medium">Favorites</span>
           </Button>
-          <Button variant="outline" className="flex flex-col items-center gap-2 h-16">
+          <Button 
+            variant="outline" 
+            className="flex flex-col items-center gap-2 h-16"
+            onClick={onNavigateToMap}
+          >
             <Map className="h-5 w-5" />
             <span className="text-sm font-medium">Event Map</span>
           </Button>
@@ -373,6 +378,7 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
           </Card>
         </div>
       </div>
+
     </div>
   )
 }

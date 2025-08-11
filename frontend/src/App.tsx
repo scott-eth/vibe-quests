@@ -18,6 +18,7 @@ import Quests from '@/components/Quests'
 import Fair from '@/components/Fair'
 import WalletComponent from '@/components/Wallet'
 import Schedule from '@/components/Schedule'
+import EventMap from '@/components/EventMap'
 import Favorites from '@/components/Favorites'
 import Toast from '@/components/ui/toast'
 import EventModal from '@/components/EventModal'
@@ -44,7 +45,7 @@ interface UserProfile {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'quests' | 'fair' | 'wallet' | 'schedule' | 'favorites'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'quests' | 'fair' | 'wallet' | 'schedule' | 'favorites' | 'map'>('home')
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
@@ -614,6 +615,7 @@ function App() {
         return <Fair 
           onNavigateToSchedule={() => setCurrentPage('schedule')}
           onNavigateToFavorites={() => setCurrentPage('favorites')}
+          onNavigateToMap={() => setCurrentPage('map')}
           onEventClick={openEventModal}
         />
       case 'favorites':
@@ -626,6 +628,10 @@ function App() {
         />
       case 'wallet':
         return <WalletComponent />
+      case 'map':
+        return <EventMap 
+          onNavigateBack={() => setCurrentPage('fair')}
+        />
       default:
         return <HomePage />
     }

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 614 771">
+  <g id="walls_" data-name="walls/">
+    <path id="interior-wall-1" d="M109,769h502.63l-48.92-261.76,1.97-.37,49.33,264.13H107v-54H13v-2h94v-241h2v295ZM58,568h-2v-94h2v94ZM468,7l83.9,437.15-1.96.38L466.38,9h-138.38v-2h140ZM58,338h-2V63H0v-2h58v277ZM275,9H109v329h-2V9H14v-2h261v2Z"/>
+  </g>
+  <g id="swag_" data-name="swag/">
+    <rect id="swag" x="175" y="706" width="67" height="62" fill="#e0af7d"/>
+  </g>
+  <g id="art-exhbition_" data-name="art-exhbition/">
+    <rect id="art-exhibit-1" x="376.65" y="22.08" width="94" height="99.37" transform="translate(-5.9 82.49) rotate(-11.04)" fill="#eddab6"/>
+  </g>
+  <g id="toilets_" data-name="toilets/">
+    <rect id="toilet-mf" x="556.72" y="294.72" width="22" height="22" transform="translate(-43.91 101.57) rotate(-9.84)" fill="blue"/>
+    <rect id="toilet-dis" x="561.72" y="319.72" width="22" height="22" transform="translate(-48.11 102.79) rotate(-9.84)" fill="blue"/>
+  </g>
+  <g id="fnb_" data-name="fnb/">
+    <rect id="fnb-4" x="27" y="662" width="28" height="48" fill="#ff85a6"/>
+    <rect id="fnb-3" x="27" y="569" width="28" height="88" fill="#ff85a6"/>
+    <rect id="fnb-2" x="27" y="183" width="28" height="40" fill="#ff85a6"/>
+    <rect id="fnb-1" x="20" y="70" width="34" height="40" fill="#ff85a6"/>
+  </g>
+  <g id="defi_" data-name="defi/">
+    <path id="defi-8" d="M193,326l-20,35-17-10,20-35,17,10Z" fill="#e82"/>
+    <path id="defi-7" d="M277.5,362l-17.5,10-20-35,17-10,20.5,35Z" fill="#e82"/>
+    <path id="defi-4" d="M212,348l-22.5-13,10-18,23,13-10.5,18Z" fill="#74acdf"/>
+    <rect id="defi-3" x="191.5" y="376" width="68" height="34" fill="#74acdf"/>
+    <rect id="defi-2" x="157.5" y="376" width="33" height="14" fill="#e82"/>
+    <rect id="defi-1" x="203.69" y="341.21" width="33" height="14" transform="translate(-191.47 364.79) rotate(-60)" fill="#e82"/>
+    <path id="defi-6" d="M190.5,337l21,37.5h-42.5l21.5-37.5Z" fill="#74acdf"/>
+    <path id="defi-5" d="M236.5,338.5l21,37.5h-42.5l21.5-37.5Z" fill="#74acdf"/>
+  </g>
+  <g id="biotech_" data-name="biotech/">
+    <path id="biotech-8" d="M240.5,256l20-35,17,10-20,35-17-10Z" fill="#e82"/>
+    <path id="biotech-7" d="M156,220l17.5-10,20,35-17,10-20.5-35Z" fill="#e82"/>
+    <path id="biotech-6" d="M221.5,234l22.5,13-10,18-23-13,10.5-18Z" fill="#74acdf"/>
+    <rect id="biotech-5" x="174" y="172" width="68" height="34" fill="#74acdf"/>
+    <rect id="biotech-4" x="243" y="192" width="33" height="14" fill="#e82"/>
+    <rect id="biotech-3" x="196.81" y="226.79" width="33" height="14" transform="translate(-95.81 301.63) rotate(-60)" fill="#e82"/>
+    <path id="biotech-2" d="M243,245l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf"/>
+    <path id="biotech-1" d="M197,243.5l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf"/>
+  </g>
+  <g id="hardware_" data-name="hardware/">
+    <path id="hardware-8" d="M240.5,618l20-35,17,10-20,35-17-10Z" fill="#e82"/>
+    <path id="hardware-7" d="M156,582l17.5-10,20,35-17,10-20.5-35Z" fill="#e82"/>
+    <path id="hardware-6" d="M221.5,596l22.5,13-10,18-23-13,10.5-18Z" fill="#74acdf"/>
+    <rect id="hardware-5" x="174" y="534" width="68" height="34" fill="#74acdf"/>
+    <rect id="hardware-4" x="243" y="554" width="33" height="14" fill="#e82"/>
+    <rect id="hardware-3" x="196.81" y="588.79" width="33" height="14" transform="translate(-409.31 482.63) rotate(-60)" fill="#e82"/>
+    <path id="hardware-2" d="M243,607l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf"/>
+    <path id="hardware-1" d="M197,605.5l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf"/>
+  </g>
+  <g id="coffee">
+    <rect id="coffee-3" x="328" y="236" width="27" height="27" fill="#f50b0b"/>
+    <rect id="coffee-2" x="328" y="236" width="27" height="27" fill="#f50b0b"/>
+    <rect id="coffee-1" x="328" y="459" width="27" height="27" fill="#f50b0b"/>
+  </g>
+  <g id="cowork">
+    <rect id="cowork-8" x="146" y="104" width="100" height="34" fill="#aaeba1"/>
+    <rect id="cowork-7" x="328" y="206" width="27" height="27" fill="#aaeba1"/>
+    <rect id="cowork-6" x="321" y="266" width="41" height="42" fill="#aaeba1"/>
+    <rect id="cowork-5" x="321" y="328" width="41" height="42" fill="#aaeba1"/>
+    <rect id="cowork-4" x="328" y="429" width="28" height="27" fill="#aaeba1"/>
+    <rect id="cowork-3" x="328" y="520" width="28" height="27" fill="#aaeba1"/>
+    <rect id="cowork-2" x="410.68" y="457.02" width="100.63" height="33.17" transform="translate(-82.06 96.9) rotate(-11.02)" fill="#aaeba1"/>
+    <rect id="cowork-1" x="468" y="653" width="102" height="34" fill="#aaeba1"/>
+  </g>
+  <g id="entrance_" data-name="entrance/">
+    <rect id="entrance-east" x="555.82" y="441.73" width="34.18" height="62.65" transform="translate(-80.55 119.52) rotate(-11.13)" fill="#e5ec10"/>
+    <rect id="entrance-north" x="275" width="53" height="17" fill="#e5ec10"/>
+    <rect id="entrance-west" x="56" y="338" width="53" height="136" fill="#e5ec10"/>
+  </g>
+</svg>
