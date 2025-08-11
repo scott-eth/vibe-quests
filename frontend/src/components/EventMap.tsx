@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, MapPin, Users, Search, Building2, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft } from 'lucide-react'
+import { X, Users, Search, Building2, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface POI {
@@ -178,13 +178,7 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     return categoryInfo ? categoryInfo.color : 'bg-gray-100 text-gray-700'
   }
 
-  // Filter POIs based on search only (all categories visible, but some dimmed)
-  const filteredPOIs = pois.filter(poi => {
-    const matchesSearch = searchTerm === '' || 
-      poi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      poi.description.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
-  })
+
 
   // Helper function to determine if a category should be dimmed
   const shouldDimCategory = (category: string) => {
