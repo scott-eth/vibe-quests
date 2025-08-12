@@ -11,6 +11,11 @@ export const generateToken = (userId: string): string => {
 
 export const verifyToken = (token: string): { userId: string } | null => {
   try {
+    // Handle demo token for development
+    if (token === 'demo-user-token-123') {
+      return { userId: 'demo-user-123' }
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
     return decoded
   } catch (error) {

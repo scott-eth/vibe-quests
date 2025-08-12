@@ -7,13 +7,15 @@ import {
   Trophy, 
   MapPin,
   Users,
-  ArrowRight
+  QrCode,
+  X,
+  Ticket
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { API_CONFIG, buildApiUrl, API_ENDPOINTS } from './config'
 import Quests from '@/components/Quests'
 import Fair from '@/components/Fair'
 import WalletComponent from '@/components/Wallet'
@@ -54,6 +56,11 @@ function App() {
   const [toastAction, setToastAction] = useState<(() => void) | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
+  const [isMapFocusedMode, setIsMapFocusedMode] = useState(false)
+  const [mapFocusDistrict, setMapFocusDistrict] = useState<string | null>(null)
+  const [qrModalOpen, setQrModalOpen] = useState(false)
+  const [selectedQrEvent, setSelectedQrEvent] = useState<any | null>(null)
+  const [walletActiveSection, setWalletActiveSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings'>('wallet')
 
   // Scroll to top on initial page load
   useEffect(() => {
@@ -69,6 +76,14 @@ function App() {
   useEffect(() => {
     if (isOnboardingComplete) {
       window.scrollTo(0, 0)
+    }
+    // Reset focused mode when leaving map page
+    if (currentPage !== 'map') {
+      setIsMapFocusedMode(false)
+    }
+    // Reset wallet section when leaving wallet page
+    if (currentPage !== 'wallet') {
+      setWalletActiveSection('wallet')
     }
   }, [currentPage, isOnboardingComplete])
 
@@ -94,6 +109,13 @@ function App() {
       image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=500&auto=format&fit=crop",
       icon: <Wallet className="h-6 w-6" />,
       color: "from-green-500 to-emerald-600"
+    },
+    {
+      title: "Tickets",
+      description: "Access your event tickets and QR codes for seamless venue entry",
+      image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=500&auto=format&fit=crop",
+      icon: <Ticket className="h-6 w-6" />,
+      color: "from-pink-500 to-rose-600"
     },
     {
       title: "Schedule", 
@@ -162,6 +184,17 @@ function App() {
     setIsEventModalOpen(false)
   }
 
+  // QR modal management
+  const openQrModal = (event: any) => {
+    setSelectedQrEvent(event)
+    setQrModalOpen(true)
+  }
+
+  const closeQrModal = () => {
+    setSelectedQrEvent(null)
+    setQrModalOpen(false)
+  }
+
   // Onboarding handlers
   const handleAuthComplete = (method: AuthMethod, data: { email?: string; address?: string }) => {
     setUserProfile({
@@ -195,6 +228,11 @@ function App() {
 
   const handleSkipToApp = () => {
     setIsOnboardingComplete(true)
+  }
+
+  const handleNavigateToMapWithDistrict = (district: string) => {
+    setMapFocusDistrict(district)
+    setCurrentPage('map')
   }
 
   const handleBackStep = () => {
@@ -235,7 +273,9 @@ function App() {
       location: "Main Pavilion", 
       status: "attending", 
       type: "reception",
-      description: "Welcome reception with networking and keynote speakers"
+      description: "Welcome reception with networking and keynote speakers",
+      qrCode: "QR-OPENING-RECEPTION-001",
+      organizer: "EF TEAM"
     },
     { 
       id: 2,
@@ -244,7 +284,9 @@ function App() {
       location: "Pavilion Verde", 
       status: "attending", 
       type: "networking",
-      description: "Evening networking event for DeFi enthusiasts"
+      description: "Evening networking event for DeFi enthusiasts",
+      qrCode: "QR-DEFI-MIXER-002",
+      organizer: "DEFI ALLIANCE"
     }
   ])
 
@@ -252,8 +294,40 @@ function App() {
   useEffect(() => {
     const fetchTodayEvents = async () => {
       try {
-        // In a real app, you'd use the actual auth token
-        // For demo purposes, we'll use mock data that matches backend structure
+        // For demo purposes, we'll use a demo user token
+        // In a real app, this would come from your auth system
+        const demoToken = API_CONFIG.DEMO_TOKEN
+        
+        const response = await fetch(buildApiUrl(API_ENDPOINTS.EVENTS.USER_TODAY), {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${demoToken}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            // Sort events by time for better timeline display
+            const sortedEvents = result.data.sort((a: any, b: any) => {
+              // Extract hour from time string (e.g., "09:00–10:00" -> 9)
+              const getHour = (timeStr: string) => {
+                const hour = parseInt(timeStr.split(':')[0])
+                return hour
+              }
+              
+              return getHour(a.time) - getHour(b.time)
+            })
+            
+            setUserSignedUpEvents(sortedEvents)
+            return
+          }
+        }
+        
+        // Fallback to mock data if API call fails
+        console.log('API call failed, using fallback data')
         const mockTodayEvents = [
           {
             id: 2,
@@ -262,7 +336,9 @@ function App() {
             location: "LA RURAL",
             status: "registered",
             type: "core",
-            description: "The main Ethereum Foundation presentation day with core protocol updates"
+            description: "The main Ethereum Foundation presentation day with core protocol updates",
+            qrCode: "QR-ETHEREUM-DAY-002",
+            organizer: "ETHEREUM FOUNDATION"
           },
           {
             id: 3,
@@ -271,7 +347,9 @@ function App() {
             location: "MAIN STAGE",
             status: "registered",
             type: "core",
-            description: "Opening ceremony presentation for all attendees"
+            description: "Opening ceremony presentation for all attendees",
+            qrCode: "QR-OPENING-CEREMONY-001",
+            organizer: "EF TEAM"
           },
           {
             id: 4,
@@ -280,22 +358,13 @@ function App() {
             location: "WORKSHOP HALL",
             status: "registered",
             type: "partner",
-            description: "Hands-on workshop series covering DeFi protocols"
+            description: "Hands-on workshop series covering DeFi protocols",
+            qrCode: "QR-DEFI-WORKSHOP-003",
+            organizer: "AAVE TEAM"
           }
         ]
         
-        // Sort events by time for better timeline display
-        const sortedEvents = mockTodayEvents.sort((a, b) => {
-          // Extract hour from time string (e.g., "09:00–10:00" -> 9)
-          const getHour = (timeStr: string) => {
-            const hour = parseInt(timeStr.split(':')[0])
-            return hour
-          }
-          
-          return getHour(a.time) - getHour(b.time)
-        })
-        
-        setUserSignedUpEvents(sortedEvents)
+        setUserSignedUpEvents(mockTodayEvents)
       } catch (error) {
         console.error('Failed to fetch today events:', error)
         // Keep default events on error
@@ -360,25 +429,31 @@ function App() {
                     
                     {/* Event content */}
                     <div className="flex-1 min-w-0 pt-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-base text-gray-900">{event.title}</h4>
-                        <Badge variant="outline" className="text-xs ml-2 flex-shrink-0">
-                          {event.type}
-                        </Badge>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-base text-gray-900">{event.title}</h4>
+                        </div>
+                        <button
+                          onClick={() => openQrModal(event)}
+                          className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 flex items-center justify-center transition-all duration-200 group touch-manipulation"
+                          title="Tap to view QR Code"
+                        >
+                          <QrCode className="h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                        </button>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">{event.location}</p>
+                      <p className="text-sm text-muted-foreground">{event.location}</p>
                       <p className="text-xs text-muted-foreground">{event.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="pt-4 border-t mt-4 flex gap-3">
-              <Button variant="outline" size="default" className="flex-1" onClick={() => setCurrentPage('schedule')}>
-                View Schedule <ArrowRight className="h-4 w-4 ml-1" />
+            <div className="pt-4 border-t mt-4 space-y-3">
+              <Button variant="outline" size="default" className="w-full" onClick={() => setCurrentPage('schedule')}>
+                View Schedule
               </Button>
-              <Button variant="outline" size="default" className="flex-1" onClick={() => setCurrentPage('favorites')}>
-                View favorite events <ArrowRight className="h-4 w-4 ml-1" />
+              <Button variant="outline" size="default" className="w-full" onClick={() => setCurrentPage('favorites')}>
+                View favorite events
               </Button>
             </div>
           </CardContent>
@@ -446,8 +521,8 @@ function App() {
             </div>
             
             <div className="pt-4 border-t">
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setCurrentPage('quests')}>
-                View All Quests <ArrowRight className="h-4 w-4 ml-1" />
+              <Button variant="outline" size="default" className="w-full" onClick={() => setCurrentPage('quests')}>
+                View Quests
               </Button>
             </div>
           </CardContent>
@@ -465,18 +540,27 @@ function App() {
         <div className="-mx-6 px-6 overflow-x-auto pb-4">
           <div className="flex gap-4 w-max">
               {featuredItems.map((item, index) => {
-                const getNavigationPage = (title: string) => {
+                const handleFeatureNavigation = (title: string) => {
                   switch (title) {
                     case 'Quests':
-                      return 'quests'
+                      setCurrentPage('quests')
+                      break
                     case 'World\'s Fair':
-                      return 'fair'
+                      setCurrentPage('fair')
+                      break
                     case 'Wallet':
-                      return 'wallet'
+                      setWalletActiveSection('wallet')
+                      setCurrentPage('wallet')
+                      break
+                    case 'Tickets':
+                      setWalletActiveSection('tickets')
+                      setCurrentPage('wallet')
+                      break
                     case 'Schedule':
-                      return 'schedule'
+                      setCurrentPage('schedule')
+                      break
                     default:
-                      return 'home'
+                      setCurrentPage('home')
                   }
                 }
                 
@@ -484,7 +568,7 @@ function App() {
                   <div 
                     key={index} 
                     className="relative w-80 h-48 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer"
-                    onClick={() => setCurrentPage(getNavigationPage(item.title))}
+                    onClick={() => handleFeatureNavigation(item.title)}
                   >
                     <img 
                       src={item.image}
@@ -512,7 +596,58 @@ function App() {
     </div>
   )
 
-  // Mobile Navigation Component
+  // QR Modal Component
+  const QRModal = () => {
+    if (!qrModalOpen || !selectedQrEvent) return null
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-sm w-full p-6 relative">
+          <button
+            onClick={closeQrModal}
+            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
+          
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">{selectedQrEvent.title}</h3>
+            <p className="text-sm text-gray-600 mb-4">{selectedQrEvent.time}</p>
+            
+            {/* QR Code placeholder - in a real app this would be a generated QR code */}
+            <div className="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center mb-4">
+              <div className="text-center">
+                <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-500 font-mono">{selectedQrEvent.qrCode}</p>
+              </div>
+            </div>
+            
+            <div className="text-left space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Location:</span>
+                <span className="font-medium">{selectedQrEvent.location}</span>
+              </div>
+              {selectedQrEvent.organizer && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Organizer:</span>
+                  <span className="font-medium">{selectedQrEvent.organizer}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Type:</span>
+                <span className="font-medium">{selectedQrEvent.type}</span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-4 text-center">
+              Show this QR code at the event entrance
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const MobileNavigation = () => {
     const navItems = [
       { key: 'home', label: 'Home', icon: Home },
@@ -522,7 +657,9 @@ function App() {
     ] as const
 
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+      <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg transition-transform duration-300 ease-in-out ${
+        isMapFocusedMode ? 'translate-y-full' : 'translate-y-0'
+      }`}>
         <div className="flex items-center justify-around py-3 px-2">
           {navItems.map(({ key, label, icon: Icon }) => {
             const isActive = currentPage === key
@@ -616,6 +753,7 @@ function App() {
           onNavigateToSchedule={() => setCurrentPage('schedule')}
           onNavigateToFavorites={() => setCurrentPage('favorites')}
           onNavigateToMap={() => setCurrentPage('map')}
+          onNavigateToMapWithDistrict={handleNavigateToMapWithDistrict}
           onEventClick={openEventModal}
         />
       case 'favorites':
@@ -627,10 +765,18 @@ function App() {
           onNavigateToSchedule={() => setCurrentPage('schedule')}
         />
       case 'wallet':
-        return <WalletComponent />
+        return <WalletComponent 
+          onNavigateToSchedule={() => setCurrentPage('schedule')} 
+          initialActiveSection={walletActiveSection}
+        />
       case 'map':
         return <EventMap 
-          onNavigateBack={() => setCurrentPage('fair')}
+          onNavigateBack={() => {
+            setCurrentPage('fair')
+            setMapFocusDistrict(null)
+          }}
+          onFocusedModeChange={setIsMapFocusedMode}
+          focusDistrict={mapFocusDistrict}
         />
       default:
         return <HomePage />
@@ -666,6 +812,9 @@ function App() {
         favoriteEvents={favoriteEvents}
         toggleFavorite={toggleFavorite}
       />
+      
+      {/* QR Modal */}
+      <QRModal />
     </div>
   )
 }

@@ -185,12 +185,13 @@ router.get('/user/schedule', authenticateToken, (req: AuthRequest, res) => {
     
     const userEvents = registrations.map(reg => {
       const event = dataStore.getEventById(reg.eventId)
+      if (!event) return null
       return {
         ...event,
         registrationStatus: reg.status,
         registeredAt: reg.registeredAt
       }
-    }).filter(event => event.id) // Filter out any null events
+    }).filter(event => event !== null) // Filter out any null events
 
     res.json({
       success: true,
@@ -235,7 +236,9 @@ router.get('/user/today', authenticateToken, (req: AuthRequest, res) => {
         type: event.type.toLowerCase(),
         description: event.description || `${event.type} event at ${event.location}`,
         registrationStatus: reg.status,
-        registeredAt: reg.registeredAt
+        registeredAt: reg.registeredAt,
+        qrCode: event.qrCode,
+        organizer: event.organizer
       }
     }).filter(event => event !== null)
 

@@ -1314,7 +1314,7 @@ const Quests: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <HeroCard
                 title="Onboarding"
-                description="Start your journey with guided missions designed to help you master the basics and unlock your potential."
+                description="Start your journey with guided missions designed to help you master the basics of Ethereum."
                 imageUrl="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000&auto=format&fit=crop"
                 onClick={() => setActiveQuestline('onboarding')}
                 className="transform transition-all duration-500 hover:shadow-purple-500/25"
@@ -1323,7 +1323,7 @@ const Quests: React.FC = () => {
               
               <HeroCard
                 title="App Showcase"
-                description="Explore the future of technology by visiting brand booths and pavilions across eight cutting-edge sectors."
+                description="Explore the latest Ethereum applications by visiting brand booths and pavilions across eight cutting-edge sectors."
                 imageUrl="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop"
                 onClick={() => setActiveQuestline('showcase')}
                 className="transform transition-all duration-500 hover:shadow-blue-500/25"

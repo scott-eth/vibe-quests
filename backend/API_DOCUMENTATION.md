@@ -144,7 +144,9 @@ Get all events with optional filtering.
       "capacity": 2000,
       "registeredCount": 1847,
       "userRegistered": false,
-      "userFavorited": false
+      "userFavorited": false,
+      "qrCode": "QR-ETHEREUM-DAY-002",
+      "organizer": "ETHEREUM FOUNDATION"
     }
   ],
   "pagination": {
@@ -362,6 +364,7 @@ interface Event {
   registeredCount: number
   isCommunityEvent: boolean
   description?: string
+  qrCode?: string
 }
 ```
 

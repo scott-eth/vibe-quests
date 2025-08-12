@@ -49,6 +49,7 @@ export interface Event {
   requirements?: string[]
   isCommunityEvent: boolean
   isActive: boolean
+  qrCode?: string
 }
 
 export interface EventRegistration {

@@ -30,9 +30,14 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 
-const WalletComponent: React.FC = () => {
+interface WalletProps {
+  onNavigateToSchedule?: () => void;
+  initialActiveSection?: 'profile' | 'wallet' | 'tickets' | 'collections' | 'settings';
+}
+
+const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialActiveSection }) => {
   const [showBalance, setShowBalance] = useState(true)
-  const [activeSection, setActiveSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings'>('wallet')
+  const [activeSection, setActiveSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings'>(initialActiveSection || 'wallet')
   const [qrModalOpen, setQrModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<any>(null)
   const [settingsSubPage, setSettingsSubPage] = useState<string | null>(null)
@@ -981,9 +986,23 @@ const WalletComponent: React.FC = () => {
                     <p className="text-white/80 text-sm">Attendee</p>
                     <p className="font-semibold">{userData.displayName}</p>
                   </div>
-                  <div className="bg-white/20 p-3 rounded-lg">
+                  <button
+                    onClick={() => {
+                      setSelectedEvent({
+                        id: 'main-devconnect',
+                        name: 'Devconnect ARG 2025',
+                        time: 'Nov 17-22, 2025',
+                        location: 'Buenos Aires, Argentina',
+                        organizer: 'ETHEREUM FOUNDATION',
+                        type: 'Core',
+                        qrCode: 'QR-DEVCONNECT-MAIN-001'
+                      })
+                      setQrModalOpen(true)
+                    }}
+                    className="bg-white/20 p-3 rounded-lg hover:bg-white/30 transition-colors"
+                  >
                     <QrCode className="h-8 w-8" />
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1024,7 +1043,11 @@ const WalletComponent: React.FC = () => {
                       <div className="text-center py-6">
                         <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500 mb-3">No events scheduled for this day</p>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={onNavigateToSchedule}
+                        >
                           View schedule
                         </Button>
                       </div>
@@ -1797,11 +1820,13 @@ const WalletComponent: React.FC = () => {
 
       {/* Content */}
       <div className="px-4 py-6">
-        {activeSection === 'profile' && <ProfileSection />}
-        {activeSection === 'wallet' && <WalletSection />}
-        {activeSection === 'tickets' && <TicketsSection />}
-        {activeSection === 'collections' && <CollectionsSection />}
-        {activeSection === 'settings' && <SettingsSection />}
+        <div className="max-w-4xl mx-auto">
+          {activeSection === 'profile' && <ProfileSection />}
+          {activeSection === 'wallet' && <WalletSection />}
+          {activeSection === 'tickets' && <TicketsSection />}
+          {activeSection === 'collections' && <CollectionsSection />}
+          {activeSection === 'settings' && <SettingsSection />}
+        </div>
       </div>
       
       {/* QR Modal */}

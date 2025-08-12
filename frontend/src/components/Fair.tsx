@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, Calendar, Users, Heart, Map, Building2, Palette, Gamepad2, Cpu, GraduationCap, Brain, Microscope } from 'lucide-react'
+import { MapPin, Calendar, Users, Heart, Map, DollarSign, Cpu, Microscope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,9 +9,10 @@ interface FairProps {
   onNavigateToFavorites?: () => void;
   onEventClick?: (event: any) => void;
   onNavigateToMap?: () => void;
+  onNavigateToMapWithDistrict?: (district: string) => void;
 }
 
-const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites, onEventClick, onNavigateToMap }) => {
+const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites, onEventClick, onNavigateToMap, onNavigateToMapWithDistrict }) => {
   const eventInfo = [
     { icon: Calendar, label: "Nov 17–22, 2025", subtitle: "6 Days" },
     { icon: MapPin, label: "Buenos Aires, Argentina", subtitle: "+ Virtual" },
@@ -261,75 +262,35 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
         {/* Event Districts */}
         <div>
           <h2 className="text-2xl font-bold mb-4">Event Districts</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigateToMapWithDistrict?.('defi-district')}>
               <CardContent className="p-4 text-center">
-                <Building2 className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <DollarSign className="h-8 w-8 mx-auto mb-2 text-blue-500" />
                 <h3 className="font-semibold text-sm mb-1">DeFi</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Pavilion Verde</Badge>
                 <p className="text-xs text-muted-foreground">Explore DeFi protocols and financial innovations</p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <Palette className="h-8 w-8 mx-auto mb-2 text-pink-500" />
-                <h3 className="font-semibold text-sm mb-1">Arts</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Galería Norte</Badge>
-                <p className="text-xs text-muted-foreground">Discover NFTs, digital art, and creative experiences</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <Gamepad2 className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                <h3 className="font-semibold text-sm mb-1">Gaming</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Plaza Central</Badge>
-                <p className="text-xs text-muted-foreground">Play blockchain games and virtual experiences</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigateToMapWithDistrict?.('social-district')}>
               <CardContent className="p-4 text-center">
                 <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
                 <h3 className="font-semibold text-sm mb-1">Social</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Centro Sur</Badge>
                 <p className="text-xs text-muted-foreground">Connect with communities and social platforms</p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigateToMapWithDistrict?.('hardware-district')}>
               <CardContent className="p-4 text-center">
                 <Cpu className="h-8 w-8 mx-auto mb-2 text-orange-500" />
                 <h3 className="font-semibold text-sm mb-1">Hardware</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Laboratorio Este</Badge>
                 <p className="text-xs text-muted-foreground">Explore physical devices and infrastructure</p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <GraduationCap className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                <h3 className="font-semibold text-sm mb-1">Onboarding</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Espacio Oeste</Badge>
-                <p className="text-xs text-muted-foreground">Learn Web3 basics and get started</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <Brain className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-                <h3 className="font-semibold text-sm mb-1">AI</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Sector Azul</Badge>
-                <p className="text-xs text-muted-foreground">Artificial intelligence and machine learning</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigateToMapWithDistrict?.('biotech-district')}>
               <CardContent className="p-4 text-center">
                 <Microscope className="h-8 w-8 mx-auto mb-2 text-teal-500" />
                 <h3 className="font-semibold text-sm mb-1">Biotech</h3>
-                <Badge variant="secondary" className="text-xs mb-2">Jardín Común</Badge>
                 <p className="text-xs text-muted-foreground">Biotechnology and life sciences innovations</p>
               </CardContent>
             </Card>

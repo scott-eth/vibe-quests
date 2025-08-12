@@ -16,9 +16,15 @@ const app = express()
 const PORT = process.env.PORT || 3001
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
-// Middleware
+// Middleware - Allow multiple frontend URLs for development
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: [
+    FRONTEND_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:3000'
+  ],
   credentials: true
 }))
 app.use(express.json({ limit: '10mb' }))

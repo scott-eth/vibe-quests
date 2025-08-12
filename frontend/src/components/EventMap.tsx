@@ -18,9 +18,11 @@ interface POI {
 
 interface EventMapProps {
   onNavigateBack?: () => void
+  onFocusedModeChange?: (focused: boolean) => void
+  focusDistrict?: string | null
 }
 
-const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
+const EventMap: React.FC<EventMapProps> = ({ onNavigateBack, onFocusedModeChange, focusDistrict }) => {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 })
@@ -38,9 +40,9 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     { 
       id: 'coworking-area', name: 'Coworking Area', category: 'cowork', 
       description: 'Flexible workspace for developers, entrepreneurs, and remote workers', 
-      currentEvent: 'Open Coworking - All Day', capacity: '200+ people', 
+      capacity: '200+ people', 
       amenities: ['WiFi', 'Power Outlets', 'Printing', 'Meeting Rooms', 'Phone Booths', 'Whiteboards', 'Coffee Station'],
-      companyDescription: 'A collaborative workspace designed for the blockchain and tech community. Find your perfect spot whether you need focused work time, team collaboration, or networking opportunities.'
+      companyDescription: 'Dedicated space for collaborative or solo work. Find your perfect spot whether you need focused work time, team collaboration, or networking opportunities — open all day.'
     },
     
     // DeFi District
@@ -89,37 +91,37 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     
     // Coffee Stations
     { 
-      id: 'coffee-stations', name: 'Coffee Stations', category: 'coffee', 
+      id: 'coffee-stations', name: 'Coffee Station', category: 'coffee', 
       description: 'Premium coffee and refreshments throughout the venue', 
-      currentEvent: 'Fresh Coffee - All Day', capacity: 'Multiple locations', 
+      capacity: 'Multiple locations', 
       amenities: ['Espresso', 'Cold Brew', 'Tea Selection', 'Pastries', 'Energy Drinks', 'Crypto Payments'],
-      companyDescription: 'Multiple coffee stations located throughout the venue serving premium beverages and light snacks. Perfect for networking breaks and staying energized during the event.'
+      companyDescription: 'One of many delicious coffee stations located throughout the venue, serving premium caffeinated beverages and light snacks. Perfect for networking breaks and staying energized during the event.'
     },
     
     // Food & Beverage
     { 
-      id: 'fnb-1', name: 'Decentralized Dining', category: 'fnb', 
-      description: 'Multi-vendor food hall with crypto payments', 
-      amenities: ['Crypto Payments', 'Multiple Cuisines', 'Vegetarian Options', 'Seating for 200'],
-      companyDescription: 'Decentralized Dining brings together diverse food vendors in a blockchain-powered marketplace.'
+      id: 'fnb-1', name: 'Asado Express', category: 'fnb', 
+      description: 'Traditional Argentine grilled meats and empanadas', 
+      amenities: ['Asado BBQ', 'Fresh Empanadas', 'Chimichurri', 'Choripán'],
+      companyDescription: 'Authentic Argentine asado experience featuring premium grilled meats, homemade empanadas, and traditional chimichurri sauce.'
     },
     { 
-      id: 'fnb-2', name: 'Token Treats', category: 'fnb', 
-      description: 'Healthy snacks and token rewards', 
-      amenities: ['Loyalty Tokens', 'Healthy Options', 'Quick Service', 'Sustainability Focus'],
-      companyDescription: 'Token Treats rewards healthy eating choices with blockchain-based loyalty tokens.'
+      id: 'fnb-2', name: 'Porteño Bites', category: 'fnb', 
+      description: 'Buenos Aires street food and milanesas', 
+      amenities: ['Milanesas', 'Provoleta', 'Medialunas', 'Mate Tea'],
+      companyDescription: 'Classic Buenos Aires comfort food including crispy milanesas, grilled provoleta cheese, and fresh medialunas with authentic mate tea.'
     },
     { 
-      id: 'fnb-3', name: 'Global Gastronomy', category: 'fnb', 
-      description: 'International cuisine with cultural NFTs', 
-      amenities: ['Cultural NFTs', 'International Dishes', 'Chef Stories', 'Recipe Sharing'],
-      companyDescription: 'Global Gastronomy celebrates world cuisine while preserving cultural heritage through NFTs.'
+      id: 'fnb-3', name: 'Dulce & Salado', category: 'fnb', 
+      description: 'Argentine pastries and alfajores', 
+      amenities: ['Alfajores', 'Facturas', 'Dulce de Leche', 'Cortado Coffee'],
+      companyDescription: 'Traditional Argentine bakery specializing in alfajores, fresh facturas, and artisanal dulce de leche treats paired with perfect cortado coffee.'
     },
     { 
-      id: 'fnb-4', name: 'Night Owl Kitchen', category: 'fnb', 
-      description: 'Late-night dining for developers', 
-      amenities: ['24/7 Service', 'Developer Fuel', 'Energy Foods', 'Quiet Dining'],
-      companyDescription: 'Night Owl Kitchen specializes in late-night dining solutions for hardworking developers and creators.'
+      id: 'fnb-4', name: 'Tokyo Ramen Bar', category: 'fnb', 
+      description: 'Authentic Japanese ramen and gyoza', 
+      amenities: ['Tonkotsu Ramen', 'Miso Ramen', 'Gyoza', 'Japanese Beer'],
+      companyDescription: 'Authentic Japanese ramen experience with rich tonkotsu and miso broths, handmade gyoza, and imported Japanese beverages.'
     },
     
     // Toilets
@@ -138,11 +140,10 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     
     // Other areas
     { 
-      id: 'art-exhibit-1', name: 'SuperRare Gallery', category: 'art-exhbition', 
+      id: 'art-exhibit-1', name: 'Artist Collective Gallery', category: 'art-exhbition', 
       description: 'Curated digital art and NFT exhibitions', 
-      currentEvent: 'Generative Art Showcase - All Day', 
       amenities: ['NFT Displays', 'Artist Talks', 'Digital Art', 'Collector Meetups'],
-      companyDescription: 'SuperRare is the digital art market on Ethereum, connecting artists and collectors through blockchain technology.'
+      companyDescription: 'Discover beautiful works by emerging artists from Argentina and around the world.'
     },
     { 
       id: 'swag', name: 'Ethereum Store', category: 'swag', 
@@ -153,22 +154,22 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     
     // Entrances
     { 
-      id: 'entrance-north', name: 'Main Reception', category: 'entrance', 
-      description: 'Primary venue entrance with registration', 
-      amenities: ['Registration Check', 'Welcome Desk', 'Information Kiosks', 'Security'],
-      companyDescription: 'Main reception area providing comprehensive visitor services and event information.'
+      id: 'entrance-north', name: 'North Entrance', category: 'entrance', 
+      description: 'Main venue entrance and reception area', 
+      amenities: ['Information Desk', 'Security Check', 'Welcome Area', 'Directions'],
+      companyDescription: 'Primary entrance to the venue with information services and visitor assistance.'
     },
     { 
-      id: 'entrance-west', name: 'Accessibility Entrance', category: 'entrance', 
-      description: 'Barrier-free entrance with full accessibility', 
-      amenities: ['Wheelchair Access', 'Assisted Entry', 'Express Check-in', 'Accessibility Support'],
-      companyDescription: 'Dedicated accessible entrance ensuring barrier-free access for all visitors.'
+      id: 'entrance-west', name: 'West Entrance', category: 'entrance', 
+      description: 'Alternative venue entrance', 
+      amenities: ['Information Desk', 'Security Check', 'Welcome Area', 'Directions'],
+      companyDescription: 'Secondary entrance to the venue with information services and visitor assistance.'
     },
     { 
-      id: 'entrance-east', name: 'VIP Reception', category: 'entrance', 
-      description: 'Exclusive entrance for speakers and VIP guests', 
-      amenities: ['VIP Services', 'Speaker Check-in', 'Priority Access', 'Concierge'],
-      companyDescription: 'Premium reception services for speakers, sponsors, and VIP attendees.'
+      id: 'entrance-east', name: 'East Entrance', category: 'entrance', 
+      description: 'Side venue entrance', 
+      amenities: ['Information Desk', 'Security Check', 'Welcome Area', 'Directions'],
+      companyDescription: 'Additional entrance to the venue with information services and visitor assistance.'
     }
   ]
 
@@ -240,6 +241,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     setSelectedPOI(poi)
     // Update URL hash for deep linking
     window.history.replaceState(null, '', `#map-${poi.id}`)
+    // Enter focused mode
+    onFocusedModeChange?.(true)
   }
 
   // Handle closing POI modal
@@ -247,6 +250,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     setSelectedPOI(null)
     // Clear URL hash
     window.history.replaceState(null, '', window.location.pathname)
+    // Exit focused mode
+    onFocusedModeChange?.(false)
   }
 
   // Pan and zoom handlers for mouse
@@ -405,7 +410,63 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     )
   }
 
-  // Handle deep linking on component mount
+  // Function to focus on a specific district
+  const focusOnDistrict = (districtId: string) => {
+    if (!svgRef.current) return
+    
+    // Get the map container element
+    const mapContainer = svgRef.current.parentElement?.parentElement
+    if (!mapContainer) return
+    
+    // Get container dimensions
+    const containerRect = mapContainer.getBoundingClientRect()
+    const containerWidth = containerRect.width
+    const containerHeight = containerRect.height
+    
+    // SVG viewBox dimensions
+    const svgWidth = 614.01
+    const svgHeight = 771
+    
+    // District center positions in SVG coordinates (center of each district rectangle)
+    const districtPositions: Record<string, { svgX: number; svgY: number }> = {
+      'defi-district': { svgX: 214.57, svgY: 328 },      // DeFi district center
+      'social-district': { svgX: 214.57, svgY: 626.87 },  // Social district center  
+      'hardware-district': { svgX: 214.57, svgY: 512.1 }, // Hardware district center
+      'biotech-district': { svgX: 214.57, svgY: 219.5 }   // Biotech district center
+    }
+    
+    const districtPos = districtPositions[districtId]
+    if (districtPos) {
+      const scale = 1.5
+      
+      // Calculate the center point of the container
+      const centerX = containerWidth / 2
+      const centerY = containerHeight / 2
+      
+      // Calculate how much to translate to center the district
+      // The SVG is positioned at the center of the container by default
+      const svgCenterX = svgWidth / 2
+      const svgCenterY = svgHeight / 2
+      
+      // Calculate offset from SVG center to district center
+      const offsetX = districtPos.svgX - svgCenterX
+      const offsetY = districtPos.svgY - svgCenterY
+      
+      // Apply scale to the offset and invert to get translation
+      const translateX = -offsetX * scale
+      const translateY = -offsetY * scale
+      
+      setTransform({
+        x: translateX,
+        y: translateY,
+        scale: scale
+      })
+      
+      // Don't auto-open modal - let users tap the district to learn more
+    }
+  }
+
+  // Handle deep linking and focus district on component mount
   useEffect(() => {
     const hash = window.location.hash
     if (hash.startsWith('#map-')) {
@@ -415,7 +476,14 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
         setSelectedPOI(poi)
       }
     }
-  }, [])
+    
+    // Handle focus district from navigation with a small delay to ensure SVG is rendered
+    if (focusDistrict) {
+      setTimeout(() => {
+        focusOnDistrict(focusDistrict)
+      }, 100)
+    }
+  }, [focusDistrict])
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
@@ -809,8 +877,14 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
       {/* POI Detail Modal */}
       {selectedPOI && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-end justify-center">
-          <div className="bg-white rounded-t-lg w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-end justify-center"
+          onClick={closePOIModal}
+        >
+          <div 
+            className="bg-white rounded-t-lg w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all duration-300 ease-out translate-y-0 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Hero Image */}
             {selectedPOI.heroImage && (
               <div className="relative">
@@ -858,17 +932,9 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
               )}
             </div>
 
-            {/* Modal Content */}
-            <div className="p-4 space-y-4">
-              {/* Description */}
-              <div>
-                <p className="text-gray-700">{selectedPOI.description}</p>
-                {selectedPOI.details && (
-                  <p className="text-sm text-gray-600 mt-2">{selectedPOI.details}</p>
-                )}
-              </div>
-
-              {/* Company Description */}
+                          {/* Modal Content */}
+              <div className="p-4 space-y-4">
+                {/* Company Description */}
               {selectedPOI.companyDescription && (
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">About</h4>
@@ -876,19 +942,19 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 </div>
               )}
 
-              {/* Companies List for Districts */}
-              {selectedPOI.companies && (
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Companies Showcasing</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedPOI.companies.map((company, index) => (
-                      <div key={index} className="text-sm text-gray-700 bg-white px-2 py-1 rounded border">
-                        {company}
-                      </div>
-                    ))}
+                              {/* Companies List for Districts */}
+                {selectedPOI.companies && (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Companies Showcasing</h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      {selectedPOI.companies.map((company, index) => (
+                        <div key={index} className="text-sm text-gray-700">
+                          {company}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Current Event */}
               {selectedPOI.currentEvent && (

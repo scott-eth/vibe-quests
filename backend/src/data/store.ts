@@ -233,7 +233,8 @@ class DataStore {
         capacity: 500,
         registeredCount: 247,
         isCommunityEvent: false,
-        isActive: true
+        isActive: true,
+        qrCode: "QR-WORLDS-FAIR-001"
       },
       {
         id: 2,
@@ -252,7 +253,8 @@ class DataStore {
         capacity: 2000,
         registeredCount: 1847,
         isCommunityEvent: false,
-        isActive: true
+        isActive: true,
+        qrCode: "QR-ETHEREUM-DAY-002"
       },
       {
         id: 3,
@@ -271,7 +273,8 @@ class DataStore {
         capacity: 5000,
         registeredCount: 4200,
         isCommunityEvent: false,
-        isActive: true
+        isActive: true,
+        qrCode: "QR-OPENING-CEREMONY-001"
       },
       {
         id: 4,
@@ -290,7 +293,8 @@ class DataStore {
         capacity: 300,
         registeredCount: 247,
         isCommunityEvent: false,
-        isActive: true
+        isActive: true,
+        qrCode: "QR-DEFI-WORKSHOP-003"
       },
       // Add more events...
     ]
@@ -336,6 +340,22 @@ class DataStore {
     sampleQuests.forEach(quest => {
       this.quests.set(quest.id, quest)
     })
+
+    // Initialize demo user for development
+    const demoUser: User = {
+      id: 'demo-user-123',
+      email: 'demo@devconnect.org',
+      name: 'Demo User',
+      displayName: 'demo.eth',
+      authMethod: 'email',
+      experienceLevel: 'experienced',
+      ticketVerified: true,
+      ticketVerificationMethod: 'email',
+      profileCompleteness: 85,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    this.users.set(demoUser.id, demoUser)
 
     // Initialize sample user registrations for demo
     // In a real app, this would be done through user actions
