@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Users, Building2, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft, DollarSign } from 'lucide-react'
+import { X, Users, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface POI {
@@ -194,7 +194,7 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   const getCategoryFilter = (category: string) => {
     if (!activeFilters.has(category)) return 'none'
     
-    const filterMap = {
+    const filterMap: Record<string, string> = {
       'cowork': 'url(#cowork-glow)',
       'defi': 'url(#defi-glow)',
       'biotech': 'url(#biotech-glow)',
@@ -755,8 +755,11 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                   alt={selectedPOI.name}
                   className="w-full h-48 object-cover rounded-t-lg"
                   onError={(e) => {
-                    e.target.style.display = 'none'
-                    e.target.parentElement.style.display = 'none'
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    if (target.parentElement) {
+                      target.parentElement.style.display = 'none'
+                    }
                   }}
                 />
                 <button
