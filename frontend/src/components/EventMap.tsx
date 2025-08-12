@@ -27,6 +27,9 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   const [isPanning, setIsPanning] = useState(false)
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 })
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
+  const [touchStartTime, setTouchStartTime] = useState<number>(0)
+  const [touchStartPoint, setTouchStartPoint] = useState({ x: 0, y: 0 })
+  const [hasMoved, setHasMoved] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
 
   // POI data based on SVG structure with brand names and company details
@@ -282,14 +285,17 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
   // Touch event handlers for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault()
-    
     if (e.touches.length === 1) {
-      // Single touch - start panning
-      setIsPanning(true)
-      setLastPanPoint({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+      // Single touch - prepare for potential pan or tap
+      const touch = e.touches[0]
+      setTouchStartTime(Date.now())
+      setTouchStartPoint({ x: touch.clientX, y: touch.clientY })
+      setLastPanPoint({ x: touch.clientX, y: touch.clientY })
+      setHasMoved(false)
+      setIsPanning(false) // Don't start panning immediately
     } else if (e.touches.length === 2) {
       // Multi-touch - prepare for pinch zoom
+      e.preventDefault() // Only prevent default for multi-touch
       setIsPanning(false)
       const distance = getTouchDistance(e.touches[0], e.touches[1])
       setLastTouchDistance(distance)
@@ -297,21 +303,35 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault()
-    
-    if (e.touches.length === 1 && isPanning) {
-      // Single touch panning
-      const deltaX = e.touches[0].clientX - lastPanPoint.x
-      const deltaY = e.touches[0].clientY - lastPanPoint.y
+    if (e.touches.length === 1) {
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - touchStartPoint.x
+      const deltaY = touch.clientY - touchStartPoint.y
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
       
-      setTransform(prev => ({
-        ...prev,
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
-      }))
+      // If we've moved more than 10 pixels, consider it a pan gesture
+      if (distance > 10 && !hasMoved) {
+        setHasMoved(true)
+        setIsPanning(true)
+        e.preventDefault() // Only prevent default once we start panning
+      }
       
-      setLastPanPoint({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+      if (isPanning) {
+        e.preventDefault()
+        // Single touch panning
+        const panDeltaX = touch.clientX - lastPanPoint.x
+        const panDeltaY = touch.clientY - lastPanPoint.y
+        
+        setTransform(prev => ({
+          ...prev,
+          x: prev.x + panDeltaX,
+          y: prev.y + panDeltaY
+        }))
+        
+        setLastPanPoint({ x: touch.clientX, y: touch.clientY })
+      }
     } else if (e.touches.length === 2 && lastTouchDistance !== null) {
+      e.preventDefault()
       // Pinch zoom
       const currentDistance = getTouchDistance(e.touches[0], e.touches[1])
       const scaleChange = currentDistance / lastTouchDistance
@@ -323,9 +343,20 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault()
+    const touchDuration = Date.now() - touchStartTime
+    
+    // If it was a short touch (< 300ms) and didn't move much, treat it as a tap
+    if (!hasMoved && touchDuration < 300) {
+      // Let the tap event bubble through for click handling
+      // Don't prevent default to allow click events
+    } else {
+      // For pan gestures, prevent default
+      e.preventDefault()
+    }
+    
     setIsPanning(false)
     setLastTouchDistance(null)
+    setHasMoved(false)
   }
 
   // Helper function to calculate distance between two touch points
@@ -335,8 +366,15 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     return Math.sqrt(dx * dx + dy * dy)
   }
 
-  // Handle SVG element click
-  const handleSVGElementClick = (elementId: string) => {
+  // Handle SVG element click/tap
+  const handleSVGElementClick = (elementId: string, e?: React.MouseEvent | React.TouchEvent) => {
+    // For touch events, only handle if it wasn't a pan gesture
+    if (e && 'touches' in e) {
+      if (hasMoved || isPanning) {
+        return // Don't handle tap if we were panning
+      }
+    }
+    
     const poi = pois.find(p => p.id === elementId)
     if (poi) {
       handlePOIClick(poi)
@@ -504,7 +542,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 x="175" y="706" width="67" height="62" 
                 fill="#e0af7d" 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('swag')}
+                onClick={(e) => handleSVGElementClick('swag', e)}
+                onTouchEnd={(e) => handleSVGElementClick('swag', e)}
               />
               {!shouldDimCategory('swag') && 
                 renderIcon(ShoppingBag, 208.5, 737, 18)
@@ -519,7 +558,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 transform="translate(-5.91 82.46) rotate(-11.04)" 
                 fill="#eddab6"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('art-exhibit-1')}
+                onClick={(e) => handleSVGElementClick('art-exhibit-1', e)}
+                onTouchEnd={(e) => handleSVGElementClick('art-exhibit-1', e)}
               />
               {!shouldDimCategory('art-exhbition') && 
                 renderIcon(Palette, 424, 72, 20)
@@ -534,7 +574,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 transform="translate(-43.9 101.52) rotate(-9.84)" 
                 fill="blue"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('toilet-mf')}
+                onClick={(e) => handleSVGElementClick('toilet-mf', e)}
+                onTouchEnd={(e) => handleSVGElementClick('toilet-mf', e)}
               />
               {!shouldDimCategory('toilets') && 
                 renderIcon(Users, 567.7, 305.77, 12)
@@ -546,7 +587,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 transform="translate(-48.1 102.74) rotate(-9.84)" 
                 fill="blue"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('toilet-dis')}
+                onClick={(e) => handleSVGElementClick('toilet-dis', e)}
+                onTouchEnd={(e) => handleSVGElementClick('toilet-dis', e)}
               />
               {!shouldDimCategory('toilets') && 
                 renderIcon(Users, 572.7, 330.77, 12)
@@ -555,22 +597,26 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
             {/* Food & Beverage */}
             <g id="fnb_" data-name="fnb " style={{ opacity: shouldDimCategory('fnb') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('fnb') }}>
-              <rect id="fnb-4" x="27" y="662" width="28" height="48" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-4')} />
+              <rect id="fnb-4" x="27" y="662" width="28" height="48" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('fnb-4', e)}
+                onTouchEnd={(e) => handleSVGElementClick('fnb-4', e)} />
               {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 686, 16)
               }
               
-              <rect id="fnb-3" x="27" y="569" width="28" height="88" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-3')} />
+              <rect id="fnb-3" x="27" y="569" width="28" height="88" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('fnb-3', e)}
+                onTouchEnd={(e) => handleSVGElementClick('fnb-3', e)} />
               {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 613, 18)
               }
               
-              <rect id="fnb-2" x="27" y="183" width="28" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-2')} />
+              <rect id="fnb-2" x="27" y="183" width="28" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('fnb-2', e)}
+                onTouchEnd={(e) => handleSVGElementClick('fnb-2', e)} />
               {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 203, 14)
               }
               
-              <rect id="fnb-1" x="20" y="70" width="34" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-1')} />
+              <rect id="fnb-1" x="20" y="70" width="34" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('fnb-1', e)}
+                onTouchEnd={(e) => handleSVGElementClick('fnb-1', e)} />
               {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 37, 90, 16)
               }
@@ -583,7 +629,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 x="162.37" y="301.9" width="104.4" height="52.2" 
                 fill="#74acdf" 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('defi-district')}
+                onClick={(e) => handleSVGElementClick('defi-district', e)}
+                onTouchEnd={(e) => handleSVGElementClick('defi-district', e)}
               />
               {!shouldDimCategory('defi') && 
                 renderIcon(DollarSign, 214.57, 328, 18)
@@ -597,7 +644,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 x="162.37" y="193.4" width="104.4" height="52.2" 
                 fill="#74acdf" 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('biotech-district')}
+                onClick={(e) => handleSVGElementClick('biotech-district', e)}
+                onTouchEnd={(e) => handleSVGElementClick('biotech-district', e)}
               />
               {!shouldDimCategory('biotech') && 
                 renderIcon(Microscope, 214.57, 219.5, 18)
@@ -611,7 +659,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 x="162.37" y="486" width="104.4" height="52.2" 
                 fill="#74acdf" 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('hardware-district')}
+                onClick={(e) => handleSVGElementClick('hardware-district', e)}
+                onTouchEnd={(e) => handleSVGElementClick('hardware-district', e)}
               />
               {!shouldDimCategory('hardware') && 
                 renderIcon(Cpu, 214.57, 512.1, 18)
@@ -620,17 +669,20 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
             {/* Coffee */}
             <g id="coffee" style={{ opacity: shouldDimCategory('coffee') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('coffee') }}>
-              <rect id="coffee-3" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
+              <rect id="coffee-3" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coffee-stations', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coffee-stations', e)} />
               {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 249.5, 12)
               }
               
-              <rect id="coffee-2" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
+              <rect id="coffee-2" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coffee-stations', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coffee-stations', e)} />
               {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 249.5, 12)
               }
               
-              <rect id="coffee-1" x="328" y="459" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
+              <rect id="coffee-1" x="328" y="459" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coffee-stations', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coffee-stations', e)} />
               {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 472.5, 12)
               }
@@ -638,42 +690,50 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
             {/* Coworking */}
             <g id="cowork" style={{ opacity: shouldDimCategory('cowork') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('cowork') }}>
-              <rect id="cowork-8" x="146" y="104" width="100" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-8" x="146" y="104" width="100" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 196, 121, 16)
               }
               
-              <rect id="cowork-7" x="328" y="206" width="27" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-7" x="328" y="206" width="27" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 219.5, 12)
               }
               
-              <rect id="cowork-6" x="321" y="266" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-6" x="321" y="266" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 287, 14)
               }
               
-              <rect id="cowork-5" x="321" y="328" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-5" x="321" y="328" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 349, 14)
               }
               
-              <rect id="cowork-4" x="328" y="429" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-4" x="328" y="429" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 342, 442.5, 12)
               }
               
-              <rect id="cowork-3" x="328" y="520" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-3" x="328" y="520" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 342, 533.5, 12)
               }
               
-              <rect id="cowork-2" x="410.65" y="457.07" width="100.63" height="33.17" transform="translate(-82.04 96.85) rotate(-11.02)" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-2" x="410.65" y="457.07" width="100.63" height="33.17" transform="translate(-82.04 96.85) rotate(-11.02)" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 461, 473.6, 16)
               }
               
-              <rect id="cowork-1" x="468" y="653" width="102" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              <rect id="cowork-1" x="468" y="653" width="102" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('coworking-area', e)}
+              onTouchEnd={(e) => handleSVGElementClick('coworking-area', e)} />
               {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 519, 670, 16)
               }
@@ -681,17 +741,20 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
             {/* Entrances */}
             <g id="entrance_" data-name="entrance " style={{ opacity: shouldDimCategory('entrance') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('entrance') }}>
-              <rect id="entrance-east" x="555.81" y="441.76" width="34.18" height="62.65" transform="translate(-80.55 119.49) rotate(-11.13)" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-east')} />
+              <rect id="entrance-east" x="555.81" y="441.76" width="34.18" height="62.65" transform="translate(-80.55 119.49) rotate(-11.13)" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('entrance-east', e)}
+              onTouchEnd={(e) => handleSVGElementClick('entrance-east', e)} />
               {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 573, 473, 14)
               }
               
-              <rect id="entrance-north" x="275" y="0" width="53" height="17" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-north')} />
+              <rect id="entrance-north" x="275" y="0" width="53" height="17" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('entrance-north', e)}
+              onTouchEnd={(e) => handleSVGElementClick('entrance-north', e)} />
               {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 301.5, 8.5, 12)
               }
               
-              <rect id="entrance-west" x="56" y="338" width="53" height="136" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-west')} />
+              <rect id="entrance-west" x="56" y="338" width="53" height="136" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => handleSVGElementClick('entrance-west', e)}
+              onTouchEnd={(e) => handleSVGElementClick('entrance-west', e)} />
               {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 82.5, 406, 18)
               }
@@ -704,7 +767,8 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 x="162.37" y="600.77" width="104.4" height="52.2" 
                 fill="#74acdf" 
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleSVGElementClick('social-district')}
+                onClick={(e) => handleSVGElementClick('social-district', e)}
+                onTouchEnd={(e) => handleSVGElementClick('social-district', e)}
               />
               {!shouldDimCategory('social') && 
                 renderIcon(Users, 214.57, 626.87, 18)
