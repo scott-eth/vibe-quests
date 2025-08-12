@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Users, Search, Building2, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft } from 'lucide-react'
+import { X, Users, Building2, Utensils, Coffee, Cpu, Microscope, Palette, ShoppingBag, LogIn, DoorOpen, Briefcase, ArrowLeft, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface POI {
@@ -23,10 +23,10 @@ interface EventMapProps {
 const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
-  const [searchTerm, setSearchTerm] = useState('')
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 })
   const [isPanning, setIsPanning] = useState(false)
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 })
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   // POI data based on SVG structure with brand names and company details
@@ -68,9 +68,20 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
       description: 'Blockchain hardware and infrastructure showcase', 
       currentEvent: 'Hardware Innovation Expo - All Day', capacity: '200 people', 
       amenities: ['Hardware Wallets', 'IoT Devices', 'Mining Equipment', 'Security Solutions'],
-      heroImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=800&auto=format&fit=crop',
+      heroImage: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
       companyDescription: 'Experience cutting-edge blockchain hardware and infrastructure solutions from industry leaders.',
       companies: ['Helium Network', 'Filecoin Station', 'Raspberry Pi Foundation', 'Ledger', 'Trezor', 'GridPlus', 'Oasis Labs', 'Ethereum Foundation']
+    },
+    
+    // Social District
+    { 
+      id: 'social-district', name: 'Social District', category: 'social', 
+      description: 'Social media and community platforms on blockchain', 
+      currentEvent: 'Web3 Social Summit - All Day', capacity: '300 people', 
+      amenities: ['Social Platforms', 'Creator Tools', 'Community Governance', 'Content Monetization'],
+      heroImage: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?q=80&w=800&auto=format&fit=crop',
+      companyDescription: 'Explore the future of decentralized social media and community-driven platforms.',
+      companies: ['Lens Protocol', 'Farcaster', 'Mirror', 'Rally', 'Audius', 'BitClout', 'Steemit', 'Minds']
     },
     
     // Coffee Stations
@@ -160,10 +171,11 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
   // Filter categories based on SVG groups
   const filterCategories = [
-    { key: 'cowork', label: 'Coworking', icon: Building2, color: 'bg-green-100 text-green-700' },
-    { key: 'defi', label: 'DeFi', icon: Users, color: 'bg-blue-100 text-blue-700' },
+    { key: 'cowork', label: 'Coworking', icon: Briefcase, color: 'bg-green-100 text-green-700' },
+    { key: 'defi', label: 'DeFi', icon: DollarSign, color: 'bg-blue-100 text-blue-700' },
     { key: 'biotech', label: 'BioTech', icon: Microscope, color: 'bg-purple-100 text-purple-700' },
     { key: 'hardware', label: 'Hardware', icon: Cpu, color: 'bg-orange-100 text-orange-700' },
+    { key: 'social', label: 'Social', icon: Users, color: 'bg-cyan-100 text-cyan-700' },
     { key: 'coffee', label: 'Coffee', icon: Coffee, color: 'bg-red-100 text-red-700' },
     { key: 'fnb', label: 'Food & Drink', icon: Utensils, color: 'bg-pink-100 text-pink-700' },
     { key: 'toilets', label: 'Restrooms', icon: Users, color: 'bg-gray-100 text-gray-700' },
@@ -176,6 +188,27 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
   const getPOIColor = (category: string) => {
     const categoryInfo = filterCategories.find(f => f.key === category)
     return categoryInfo ? categoryInfo.color : 'bg-gray-100 text-gray-700'
+  }
+
+  // Get SVG filter for highlighted categories
+  const getCategoryFilter = (category: string) => {
+    if (!activeFilters.has(category)) return 'none'
+    
+    const filterMap = {
+      'cowork': 'url(#cowork-glow)',
+      'defi': 'url(#defi-glow)',
+      'biotech': 'url(#biotech-glow)',
+      'hardware': 'url(#hardware-glow)',
+      'social': 'url(#social-glow)',
+      'coffee': 'url(#coffee-glow)',
+      'fnb': 'url(#fnb-glow)',
+      'toilets': 'url(#toilets-glow)',
+      'art-exhbition': 'url(#art-glow)',
+      'swag': 'url(#swag-glow)',
+      'entrance': 'url(#entrance-glow)'
+    }
+    
+    return filterMap[category] || 'none'
   }
 
 
@@ -213,7 +246,7 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     window.history.replaceState(null, '', window.location.pathname)
   }
 
-  // Pan and zoom handlers
+  // Pan and zoom handlers for mouse
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsPanning(true)
     setLastPanPoint({ x: e.clientX, y: e.clientY })
@@ -247,6 +280,61 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
     setTransform(prev => ({ ...prev, scale: newScale }))
   }
 
+  // Touch event handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault()
+    
+    if (e.touches.length === 1) {
+      // Single touch - start panning
+      setIsPanning(true)
+      setLastPanPoint({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+    } else if (e.touches.length === 2) {
+      // Multi-touch - prepare for pinch zoom
+      setIsPanning(false)
+      const distance = getTouchDistance(e.touches[0], e.touches[1])
+      setLastTouchDistance(distance)
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault()
+    
+    if (e.touches.length === 1 && isPanning) {
+      // Single touch panning
+      const deltaX = e.touches[0].clientX - lastPanPoint.x
+      const deltaY = e.touches[0].clientY - lastPanPoint.y
+      
+      setTransform(prev => ({
+        ...prev,
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }))
+      
+      setLastPanPoint({ x: e.touches[0].clientX, y: e.touches[0].clientY })
+    } else if (e.touches.length === 2 && lastTouchDistance !== null) {
+      // Pinch zoom
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1])
+      const scaleChange = currentDistance / lastTouchDistance
+      const newScale = Math.max(0.5, Math.min(3, transform.scale * scaleChange))
+      
+      setTransform(prev => ({ ...prev, scale: newScale }))
+      setLastTouchDistance(currentDistance)
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault()
+    setIsPanning(false)
+    setLastTouchDistance(null)
+  }
+
+  // Helper function to calculate distance between two touch points
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX
+    const dy = touch1.clientY - touch2.clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
   // Handle SVG element click
   const handleSVGElementClick = (elementId: string) => {
     const poi = pois.find(p => p.id === elementId)
@@ -257,7 +345,9 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
 
   // Helper function to render Lucide icons as SVG elements with dynamic sizing
   const renderIcon = (IconComponent: React.ComponentType<any>, x: number, y: number, baseSize: number = 16) => {
-    const size = Math.max(8, Math.min(32, baseSize * transform.scale * 0.8))
+    // Larger icons when zoomed out for better visibility - minimum 14px, maximum 32px
+    const scaleFactor = transform.scale < 1 ? 1.2 : transform.scale * 0.8
+    const size = Math.max(14, Math.min(32, baseSize * Math.max(0.8, scaleFactor)))
     return (
       <foreignObject 
         x={x - size/2} 
@@ -268,8 +358,10 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
       >
         <IconComponent 
           size={size} 
-          className="text-gray-800 drop-shadow-sm" 
-          style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.8))' }}
+          className="text-gray-800" 
+          style={{ 
+            fontWeight: 'bold'
+          }}
         />
       </foreignObject>
     )
@@ -306,19 +398,7 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
-            <input
-              type="text"
-              placeholder="Search locations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30"
-            />
-          </div>
-        </div>
+
 
         {/* Filter Chips */}
         <div className="px-4 pb-4">
@@ -346,32 +426,79 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden bg-gray-50">
+      <div 
+        className="flex-1 relative overflow-hidden bg-gradient-to-br from-white to-slate-100 cursor-move touch-none"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ touchAction: 'none' }}
+      >
         <div
-          className="w-full h-full cursor-move"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
+          className="absolute inset-0 flex items-center justify-center"
           style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
         >
           <svg
             ref={svgRef}
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 614 771"
+            viewBox="0 0 614.01 771"
             className="w-full h-full"
             style={{ minWidth: '614px', minHeight: '771px' }}
           >
+            {/* Filter definitions for category highlights */}
+            <defs>
+              <filter id="cowork-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge> 
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/> 
+                </feMerge>
+              </filter>
+              <filter id="defi-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#3b82f6" flood-opacity="0.4"/>
+              </filter>
+              <filter id="biotech-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#9333ea" flood-opacity="0.4"/>
+              </filter>
+              <filter id="hardware-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#f97316" flood-opacity="0.4"/>
+              </filter>
+              <filter id="social-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#06b6d4" flood-opacity="0.4"/>
+              </filter>
+              <filter id="coffee-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ef4444" flood-opacity="0.4"/>
+              </filter>
+              <filter id="fnb-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ec4899" flood-opacity="0.4"/>
+              </filter>
+              <filter id="toilets-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#6b7280" flood-opacity="0.4"/>
+              </filter>
+              <filter id="art-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#eab308" flood-opacity="0.4"/>
+              </filter>
+              <filter id="swag-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#6366f1" flood-opacity="0.4"/>
+              </filter>
+              <filter id="entrance-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#14b8a6" flood-opacity="0.4"/>
+              </filter>
+            </defs>
+
             {/* Walls - always visible */}
-            <g id="walls_" data-name="walls/">
-              <path id="interior-wall-1" d="M109,769h502.63l-48.92-261.76,1.97-.37,49.33,264.13H107v-54H13v-2h94v-241h2v295ZM58,568h-2v-94h2v94ZM468,7l83.9,437.15-1.96.38L466.38,9h-138.38v-2h140ZM58,338h-2V63H0v-2h58v277ZM275,9H109v329h-2V9H14v-2h261v2Z" stroke="#666" strokeWidth="1" fill="none"/>
+            <g id="walls_" data-name="walls ">
+              <path id="interior-wall-1" d="M109,769h502.63l-48.92-261.76,1.97-.37,49.33,264.13H107v-54H13v-2h94v-241h2v295ZM58,568h-2v-94h2v94ZM468,7l83.9,437.15-1.96.38L466.38,9h-138.38v-2h140ZM58,338h-2V63H0v-2h58v277ZM275,9H109v329h-2V9H14v-2h261v2Z"/>
             </g>
 
             {/* Swag */}
-            <g id="swag_" data-name="swag/" style={{ opacity: shouldDimCategory('swag') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="swag_" data-name="swag/" style={{ opacity: shouldDimCategory('swag') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('swag') }}>
               <rect 
                 id="swag" 
                 x="175" y="706" width="67" height="62" 
@@ -379,191 +506,210 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => handleSVGElementClick('swag')}
               />
-              {transform.scale > 0.9 && !shouldDimCategory('swag') && 
+              {!shouldDimCategory('swag') && 
                 renderIcon(ShoppingBag, 208.5, 737, 18)
               }
             </g>
 
             {/* Art Exhibition */}
-            <g id="art-exhbition_" data-name="art-exhbition/" style={{ opacity: shouldDimCategory('art-exhbition') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="art-exhbition_" data-name="art-exhbition " style={{ opacity: shouldDimCategory('art-exhbition') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('art-exhbition') }}>
               <rect 
                 id="art-exhibit-1" 
-                x="376.65" y="22.08" width="94" height="99.37" 
-                transform="translate(-5.9 82.49) rotate(-11.04)" 
+                x="376.65" y="22.12" width="94" height="99.37" 
+                transform="translate(-5.91 82.46) rotate(-11.04)" 
                 fill="#eddab6"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => handleSVGElementClick('art-exhibit-1')}
               />
-              {transform.scale > 0.8 && !shouldDimCategory('art-exhbition') && 
+              {!shouldDimCategory('art-exhbition') && 
                 renderIcon(Palette, 424, 72, 20)
               }
             </g>
 
             {/* Toilets */}
-            <g id="toilets_" data-name="toilets/" style={{ opacity: shouldDimCategory('toilets') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="toilets_" data-name="toilets " style={{ opacity: shouldDimCategory('toilets') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('toilets') }}>
               <rect 
                 id="toilet-mf" 
-                x="556.72" y="294.72" width="22" height="22" 
-                transform="translate(-43.91 101.57) rotate(-9.84)" 
+                x="556.7" y="294.77" width="22" height="22" 
+                transform="translate(-43.9 101.52) rotate(-9.84)" 
                 fill="blue"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => handleSVGElementClick('toilet-mf')}
               />
-              {transform.scale > 1.2 && !shouldDimCategory('toilets') && 
-                renderIcon(Users, 567.72, 305.72, 12)
+              {!shouldDimCategory('toilets') && 
+                renderIcon(Users, 567.7, 305.77, 12)
               }
               
               <rect 
                 id="toilet-dis" 
-                x="561.72" y="319.72" width="22" height="22" 
-                transform="translate(-48.11 102.79) rotate(-9.84)" 
+                x="561.7" y="319.77" width="22" height="22" 
+                transform="translate(-48.1 102.74) rotate(-9.84)" 
                 fill="blue"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => handleSVGElementClick('toilet-dis')}
               />
-              {transform.scale > 1.2 && !shouldDimCategory('toilets') && 
-                renderIcon(Users, 572.72, 330.72, 12)
+              {!shouldDimCategory('toilets') && 
+                renderIcon(Users, 572.7, 330.77, 12)
               }
             </g>
 
             {/* Food & Beverage */}
-            <g id="fnb_" data-name="fnb/" style={{ opacity: shouldDimCategory('fnb') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="fnb_" data-name="fnb " style={{ opacity: shouldDimCategory('fnb') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('fnb') }}>
               <rect id="fnb-4" x="27" y="662" width="28" height="48" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-4')} />
-              {transform.scale > 1.1 && !shouldDimCategory('fnb') && 
+              {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 686, 16)
               }
               
               <rect id="fnb-3" x="27" y="569" width="28" height="88" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-3')} />
-              {transform.scale > 0.9 && !shouldDimCategory('fnb') && 
+              {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 613, 18)
               }
               
               <rect id="fnb-2" x="27" y="183" width="28" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-2')} />
-              {transform.scale > 1.1 && !shouldDimCategory('fnb') && 
+              {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 41, 203, 14)
               }
               
               <rect id="fnb-1" x="20" y="70" width="34" height="40" fill="#ff85a6" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('fnb-1')} />
-              {transform.scale > 1.0 && !shouldDimCategory('fnb') && 
+              {!shouldDimCategory('fnb') && 
                 renderIcon(Utensils, 37, 90, 16)
               }
             </g>
 
             {/* DeFi */}
-            <g id="defi_" data-name="defi/" style={{ opacity: shouldDimCategory('defi') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
-              <path id="defi-8" d="M193,326l-20,35-17-10,20-35,17,10Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <path id="defi-7" d="M277.5,362l-17.5,10-20-35,17-10,20.5,35Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <path id="defi-4" d="M212,348l-22.5-13,10-18,23,13-10.5,18Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <rect id="defi-3" x="191.5" y="376" width="68" height="34" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <rect id="defi-2" x="157.5" y="376" width="33" height="14" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <rect id="defi-1" x="203.69" y="341.21" width="33" height="14" transform="translate(-191.47 364.79) rotate(-60)" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <path id="defi-6" d="M190.5,337l21,37.5h-42.5l21.5-37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
-              <path id="defi-5" d="M236.5,338.5l21,37.5h-42.5l21.5-37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('defi-district')} />
+            <g id="defi" style={{ opacity: shouldDimCategory('defi') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('defi') }}>
+              <rect 
+                id="defi-1" 
+                x="162.37" y="301.9" width="104.4" height="52.2" 
+                fill="#74acdf" 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleSVGElementClick('defi-district')}
+              />
+              {!shouldDimCategory('defi') && 
+                renderIcon(DollarSign, 214.57, 328, 18)
+              }
             </g>
 
             {/* BioTech */}
-            <g id="biotech_" data-name="biotech/" style={{ opacity: shouldDimCategory('biotech') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
-              <path id="biotech-8" d="M240.5,256l20-35,17,10-20,35-17-10Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <path id="biotech-7" d="M156,220l17.5-10,20,35-17,10-20.5-35Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <path id="biotech-6" d="M221.5,234l22.5,13-10,18-23-13,10.5-18Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <rect id="biotech-5" x="174" y="172" width="68" height="34" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <rect id="biotech-4" x="243" y="192" width="33" height="14" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <rect id="biotech-3" x="196.81" y="226.79" width="33" height="14" transform="translate(-95.81 301.63) rotate(-60)" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <path id="biotech-2" d="M243,245l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
-              <path id="biotech-1" d="M197,243.5l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('biotech-district')} />
+            <g id="biotech_" data-name="biotech /" style={{ opacity: shouldDimCategory('biotech') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('biotech') }}>
+              <rect 
+                id="biotech-1" 
+                x="162.37" y="193.4" width="104.4" height="52.2" 
+                fill="#74acdf" 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleSVGElementClick('biotech-district')}
+              />
+              {!shouldDimCategory('biotech') && 
+                renderIcon(Microscope, 214.57, 219.5, 18)
+              }
             </g>
 
             {/* Hardware */}
-            <g id="hardware_" data-name="hardware/" style={{ opacity: shouldDimCategory('hardware') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
-              <path id="hardware-8" d="M240.5,618l20-35,17,10-20,35-17-10Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <path id="hardware-7" d="M156,582l17.5-10,20,35-17,10-20.5-35Z" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <path id="hardware-6" d="M221.5,596l22.5,13-10,18-23-13,10.5-18Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <rect id="hardware-5" x="174" y="534" width="68" height="34" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <rect id="hardware-4" x="243" y="554" width="33" height="14" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <rect id="hardware-3" x="196.81" y="588.79" width="33" height="14" transform="translate(-409.31 482.63) rotate(-60)" fill="#e82" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <path id="hardware-2" d="M243,607l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
-              <path id="hardware-1" d="M197,605.5l-21-37.5h42.5l-21.5,37.5Z" fill="#74acdf" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('hardware-district')} />
+            <g id="hardware" style={{ opacity: shouldDimCategory('hardware') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('hardware') }}>
+              <rect 
+                id="hardware-1" 
+                x="162.37" y="486" width="104.4" height="52.2" 
+                fill="#74acdf" 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleSVGElementClick('hardware-district')}
+              />
+              {!shouldDimCategory('hardware') && 
+                renderIcon(Cpu, 214.57, 512.1, 18)
+              }
             </g>
 
             {/* Coffee */}
-            <g id="coffee" style={{ opacity: shouldDimCategory('coffee') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="coffee" style={{ opacity: shouldDimCategory('coffee') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('coffee') }}>
               <rect id="coffee-3" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
-              {transform.scale > 1.2 && !shouldDimCategory('coffee') && 
+              {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 249.5, 12)
               }
               
               <rect id="coffee-2" x="328" y="236" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
-              {transform.scale > 1.2 && !shouldDimCategory('coffee') && 
+              {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 249.5, 12)
               }
               
               <rect id="coffee-1" x="328" y="459" width="27" height="27" fill="#f50b0b" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coffee-stations')} />
-              {transform.scale > 1.2 && !shouldDimCategory('coffee') && 
+              {!shouldDimCategory('coffee') && 
                 renderIcon(Coffee, 341.5, 472.5, 12)
               }
             </g>
 
             {/* Coworking */}
-            <g id="cowork" style={{ opacity: shouldDimCategory('cowork') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+            <g id="cowork" style={{ opacity: shouldDimCategory('cowork') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('cowork') }}>
               <rect id="cowork-8" x="146" y="104" width="100" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.0 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 196, 121, 16)
               }
               
               <rect id="cowork-7" x="328" y="206" width="27" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.2 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 219.5, 12)
               }
               
               <rect id="cowork-6" x="321" y="266" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.1 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 287, 14)
               }
               
               <rect id="cowork-5" x="321" y="328" width="41" height="42" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.1 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 341.5, 349, 14)
               }
               
               <rect id="cowork-4" x="328" y="429" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.2 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 342, 442.5, 12)
               }
               
               <rect id="cowork-3" x="328" y="520" width="28" height="27" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.2 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 342, 533.5, 12)
               }
               
-              <rect id="cowork-2" x="410.68" y="457.02" width="100.63" height="33.17" transform="translate(-82.06 96.9) rotate(-11.02)" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.0 && !shouldDimCategory('cowork') && 
+              <rect id="cowork-2" x="410.65" y="457.07" width="100.63" height="33.17" transform="translate(-82.04 96.85) rotate(-11.02)" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 461, 473.6, 16)
               }
               
               <rect id="cowork-1" x="468" y="653" width="102" height="34" fill="#aaeba1" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('coworking-area')} />
-              {transform.scale > 1.0 && !shouldDimCategory('cowork') && 
+              {!shouldDimCategory('cowork') && 
                 renderIcon(Briefcase, 519, 670, 16)
               }
             </g>
 
             {/* Entrances */}
-            <g id="entrance_" data-name="entrance/" style={{ opacity: shouldDimCategory('entrance') ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
-              <rect id="entrance-east" x="555.82" y="441.73" width="34.18" height="62.65" transform="translate(-80.55 119.52) rotate(-11.13)" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-east')} />
-              {transform.scale > 1.1 && !shouldDimCategory('entrance') && 
+            <g id="entrance_" data-name="entrance " style={{ opacity: shouldDimCategory('entrance') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('entrance') }}>
+              <rect id="entrance-east" x="555.81" y="441.76" width="34.18" height="62.65" transform="translate(-80.55 119.49) rotate(-11.13)" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-east')} />
+              {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 573, 473, 14)
               }
               
               <rect id="entrance-north" x="275" y="0" width="53" height="17" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-north')} />
-              {transform.scale > 1.0 && !shouldDimCategory('entrance') && 
+              {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 301.5, 8.5, 12)
               }
               
               <rect id="entrance-west" x="56" y="338" width="53" height="136" fill="#e5ec10" className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => handleSVGElementClick('entrance-west')} />
-              {transform.scale > 0.8 && !shouldDimCategory('entrance') && 
+              {!shouldDimCategory('entrance') && 
                 renderIcon(DoorOpen, 82.5, 406, 18)
               }
             </g>
 
+            {/* Social District - New */}
+            <g id="social" style={{ opacity: shouldDimCategory('social') ? 0.5 : 1, transition: 'opacity 0.3s ease', filter: getCategoryFilter('social') }}>
+              <rect 
+                id="social-1" 
+                x="162.37" y="600.77" width="104.4" height="52.2" 
+                fill="#74acdf" 
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleSVGElementClick('social-district')}
+              />
+              {!shouldDimCategory('social') && 
+                renderIcon(Users, 214.57, 626.87, 18)
+              }
+            </g>
 
           </svg>
         </div>
@@ -608,6 +754,10 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack }) => {
                   src={selectedPOI.heroImage}
                   alt={selectedPOI.name}
                   className="w-full h-48 object-cover rounded-t-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                    e.target.parentElement.style.display = 'none'
+                  }}
                 />
                 <button
                   onClick={closePOIModal}
