@@ -418,11 +418,6 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack, onFocusedModeChange
     const mapContainer = svgRef.current.parentElement?.parentElement
     if (!mapContainer) return
     
-    // Get container dimensions
-    const containerRect = mapContainer.getBoundingClientRect()
-    const containerWidth = containerRect.width
-    const containerHeight = containerRect.height
-    
     // SVG viewBox dimensions
     const svgWidth = 614.01
     const svgHeight = 771
@@ -438,10 +433,6 @@ const EventMap: React.FC<EventMapProps> = ({ onNavigateBack, onFocusedModeChange
     const districtPos = districtPositions[districtId]
     if (districtPos) {
       const scale = 1.5
-      
-      // Calculate the center point of the container
-      const centerX = containerWidth / 2
-      const centerY = containerHeight / 2
       
       // Calculate how much to translate to center the district
       // The SVG is positioned at the center of the container by default
