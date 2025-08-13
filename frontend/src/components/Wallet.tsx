@@ -836,16 +836,6 @@ const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialA
     // Create a map to organize events by day
     const eventsByDay: { [key: string]: any[] } = {}
     
-    // Days mapping (you might want to make this more dynamic based on actual dates)
-    const dayMapping: { [key: string]: string } = {
-      'Monday': 'Monday 17 Nov',
-      'Tuesday': 'Tuesday 18 Nov', 
-      'Wednesday': 'Wednesday 19 Nov',
-      'Thursday': 'Thursday 20 Nov',
-      'Friday': 'Friday 21 Nov',
-      'Saturday': 'Saturday 22 Nov'
-    }
-    
     events.forEach(event => {
       // Transform the event to match wallet ticket format
       const transformedEvent = {

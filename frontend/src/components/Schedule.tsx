@@ -709,7 +709,7 @@ const Schedule: React.FC<ScheduleProps> = ({ onNavigateBack, favoriteEvents = ne
                 </div>
 
                 <div className="flex flex-wrap gap-0.5 mt-1">
-                  {eventForThisDay.badges.slice(0, 2).map((badge, badgeIndex) => (
+                  {eventForThisDay.badges.slice(0, 2).map((badge: string, badgeIndex: number) => (
                     <Badge
                       key={badgeIndex}
                       variant="outline"
