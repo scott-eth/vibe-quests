@@ -15,7 +15,6 @@ import {
   Award,
   Gamepad2,
   Users,
-  Camera,
   Heart,
   Palette,
   Eye,
@@ -23,7 +22,8 @@ import {
   X,
   Globe,
   Twitter,
-  Github
+  Github,
+  Wallet
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -317,34 +317,34 @@ const companyDatabase: Record<string, CompanyInfo> = {
 const onboardingQuests: Quest[] = [
   {
     id: 'ob1',
-    title: 'Welcome Aboard!',
-    description: 'Complete your profile setup and add a profile picture',
+    title: 'Create your wallet',
+    description: 'Set up your digital wallet to start your Web3 journey',
     status: 'completed',
     progress: 1,
     maxProgress: 1,
     xpReward: 100,
     coinReward: 50,
     difficulty: 'easy',
-    icon: <Target className="h-5 w-5" />
+    icon: <Wallet className="h-5 w-5" />
   },
   {
     id: 'ob2',
-    title: 'First Steps',
-    description: 'Take a tour of the main features and navigation',
+    title: 'Connect your event ticket',
+    description: 'Link your event ticket to unlock exclusive features and rewards',
     status: 'completed',
     progress: 1,
     maxProgress: 1,
     xpReward: 150,
     coinReward: 75,
     difficulty: 'easy',
-    icon: <BookOpen className="h-5 w-5" />
+    icon: <Target className="h-5 w-5" />
   },
   {
     id: 'ob3',
-    title: 'Make Connections',
-    description: 'Connect with other users in the community',
+    title: 'Set up your profile',
+    description: 'Complete your profile with a picture and personal information',
     status: 'active',
-    progress: 1,
+    progress: 0,
     maxProgress: 1,
     xpReward: 200,
     coinReward: 100,
@@ -353,39 +353,39 @@ const onboardingQuests: Quest[] = [
   },
   {
     id: 'ob4',
-    title: 'Customize Your Space',
-    description: 'Personalize your settings and preferences',
-    status: 'active',
-    progress: 1,
+    title: 'Visit the Glossary',
+    description: 'Learn key Web3 terms and concepts in our comprehensive glossary',
+    status: 'locked',
+    progress: 0,
     maxProgress: 1,
     xpReward: 250,
     coinReward: 125,
     difficulty: 'medium',
-    icon: <Palette className="h-5 w-5" />
+    icon: <BookOpen className="h-5 w-5" />
   },
   {
     id: 'ob5',
-    title: 'Share Your Story',
-    description: 'Create your first post or share content',
-    status: 'active',
-    progress: 1,
+    title: "Complete the 'Crypto Risks' mini-quiz",
+    description: 'Test your knowledge about cryptocurrency security and best practices',
+    status: 'locked',
+    progress: 0,
     maxProgress: 1,
     xpReward: 300,
     coinReward: 150,
     difficulty: 'medium',
-    icon: <Camera className="h-5 w-5" />
+    icon: <Shield className="h-5 w-5" />
   },
   {
     id: 'ob6',
-    title: 'Become a Pro',
-    description: 'Complete advanced tutorials and unlock premium features',
-    status: 'active',
-    progress: 1,
+    title: 'Add funds to your wallet',
+    description: 'Fund your wallet to start participating in the Web3 ecosystem',
+    status: 'locked',
+    progress: 0,
     maxProgress: 1,
-    xpReward: 500,
-    coinReward: 250,
+    xpReward: 400,
+    coinReward: 200,
     difficulty: 'hard',
-    icon: <Award className="h-5 w-5" />
+    icon: <Gift className="h-5 w-5" />
   }
 ]
 
@@ -514,17 +514,20 @@ const HeroCard: React.FC<{
 }> = ({ title, description, imageUrl, onClick, className = '', progress }) => {
   return (
     <div 
-      className={`relative h-64 rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${className}`}
+      className={`relative h-64 rounded-2xl overflow-hidden cursor-pointer group ${className}`}
       onClick={onClick}
     >
       {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${imageUrl})` }}
       />
       
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      
+      {/* Hover Overlay */}
+      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
       
       {/* Progress Indicator - Top Right */}
       {progress && (
@@ -1308,27 +1311,83 @@ const Quests: React.FC = () => {
           </div>
         </div>
 
-        {/* Hero Cards */}
         <div className="px-4 py-8 pb-12">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <HeroCard
-                title="Onboarding"
-                description="Start your journey with guided missions designed to help you master the basics of Ethereum."
-                imageUrl="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000&auto=format&fit=crop"
-                onClick={() => setActiveQuestline('onboarding')}
-                className="transform transition-all duration-500 hover:shadow-purple-500/25"
-                progress={{ completed: onboardingCompleted, total: onboardingTotal }}
-              />
+          <div className="max-w-4xl mx-auto space-y-12">
+            {/* Available Quests Section */}
+            <div>
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Available</h2>
+                <p className="text-sm text-gray-500 mt-1">Start your journey here</p>
+              </div>
               
-              <HeroCard
-                title="App Showcase"
-                description="Explore the latest Ethereum applications by visiting brand booths and pavilions across eight cutting-edge sectors."
-                imageUrl="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop"
-                onClick={() => setActiveQuestline('showcase')}
-                className="transform transition-all duration-500 hover:shadow-blue-500/25"
-                progress={{ completed: showcaseCompleted, total: showcaseTotal }}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <HeroCard
+                  title="Onboarding I"
+                  description="Start your journey with guided missions designed to help you master the basics of Ethereum."
+                  imageUrl="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000&auto=format&fit=crop"
+                  onClick={() => setActiveQuestline('onboarding')}
+                  className=""
+                  progress={{ completed: onboardingCompleted, total: onboardingTotal }}
+                />
+                
+                <HeroCard
+                  title="App Showcase"
+                  description="Explore the latest Ethereum applications by visiting brand booths and pavilions across eight cutting-edge sectors."
+                  imageUrl="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1000&auto=format&fit=crop"
+                  onClick={() => setActiveQuestline('showcase')}
+                  className=""
+                  progress={{ completed: showcaseCompleted, total: showcaseTotal }}
+                />
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Locked Quests Section */}
+            <div>
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Locked</h2>
+                <p className="text-sm text-gray-500 mt-1">Complete previous quests to unlock</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <HeroCard
+                    title="Onboarding II"
+                    description="Dive deeper into DeFi fundamentals and learn about decentralized finance protocols and yield farming."
+                    imageUrl="https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1000&auto=format&fit=crop"
+                    onClick={() => {}} // Disabled for locked quest
+                    className="opacity-60 cursor-not-allowed grayscale"
+                    progress={{ completed: 0, total: 8 }}
+                  />
+                  {/* Lock indicator for Onboarding II */}
+                  <div className="mt-3 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-600">
+                      <Lock className="h-4 w-4" />
+                      <span className="text-sm font-medium">Complete Onboarding I to unlock this content</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <HeroCard
+                    title="Onboarding III"
+                    description="Master advanced Web3 concepts including NFTs, DAOs, and cross-chain interactions for power users."
+                    imageUrl="https://images.unsplash.com/photo-1518186285589-2f7649de83e0?q=80&w=1000&auto=format&fit=crop"
+                    onClick={() => {}} // Disabled for locked quest
+                    className="opacity-60 cursor-not-allowed grayscale"
+                    progress={{ completed: 0, total: 10 }}
+                  />
+                  {/* Lock indicator for Onboarding III */}
+                  <div className="mt-3 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-600">
+                      <Lock className="h-4 w-4" />
+                      <span className="text-sm font-medium">Complete Onboarding II to unlock this content</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import eventRoutes from './routes/events'
 import questRoutes from './routes/quests'
 import favoriteRoutes from './routes/favorites'
 import walletRoutes from './routes/wallet'
+import collectionsRoutes from './routes/collections'
 
 // Load environment variables
 dotenv.config()
@@ -54,6 +55,7 @@ app.use('/api/events', eventRoutes)
 app.use('/api/quests', questRoutes)
 app.use('/api/favorites', favoriteRoutes)
 app.use('/api/wallet', walletRoutes)
+app.use('/api/collections', collectionsRoutes)
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -67,7 +69,8 @@ app.get('/', (req, res) => {
       events: '/api/events',
       quests: '/api/quests',
       favorites: '/api/favorites',
-      wallet: '/api/wallet'
+      wallet: '/api/wallet',
+      collections: '/api/collections'
     },
     documentation: 'See README.md for API documentation'
   })
@@ -108,6 +111,7 @@ app.listen(PORT, () => {
   console.log(`⚔️  Quests API: http://localhost:${PORT}/api/quests`)
   console.log(`❤️  Favorites API: http://localhost:${PORT}/api/favorites`)
   console.log(`💼 Wallet API: http://localhost:${PORT}/api/wallet`)
+  console.log(`🎨 Collections API: http://localhost:${PORT}/api/collections`)
   console.log('=' .repeat(50))
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
   console.log(`🔗 CORS Origin: ${FRONTEND_URL}`)

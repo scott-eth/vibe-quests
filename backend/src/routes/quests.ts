@@ -274,6 +274,65 @@ router.post('/:id/claim', authenticateToken, (req: AuthRequest, res) => {
   }
 })
 
+// POST /api/quests/:id/verify - Verify quest completion
+router.post('/:id/verify', authenticateToken, (req: AuthRequest, res) => {
+  try {
+    const questId = req.params.id
+    const userId = req.userId!
+    const { verificationData } = req.body
+    
+    const quest = dataStore.getQuestById(questId)
+    if (!quest) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quest not found'
+      } as ApiResponse)
+    }
+
+    const userQuests = dataStore.getUserQuests(userId)
+    const userQuest = userQuests.find(uq => uq.questId === questId)
+    
+    if (!userQuest || userQuest.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest not active'
+      } as ApiResponse)
+    }
+
+    // In a real app, this would verify quest completion based on the quest requirements
+    // For demo purposes, we'll mark it as completed
+    const updatedUserQuest = dataStore.updateUserQuest(userId, questId, {
+      status: 'completed',
+      progress: userQuest.maxProgress,
+      completedAt: new Date()
+    })
+
+    if (!updatedUserQuest) {
+      return res.status(404).json({
+        success: false,
+        error: 'Failed to verify quest'
+      } as ApiResponse)
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...quest,
+        ...updatedUserQuest,
+        canClaim: true
+      },
+      message: `Quest "${quest.title}" verified and completed!`
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Quest verification error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
 // GET /api/quests/user/stats - Get user's quest statistics
 router.get('/user/stats', authenticateToken, (req: AuthRequest, res) => {
   try {

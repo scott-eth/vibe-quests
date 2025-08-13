@@ -30,13 +30,13 @@ interface FavoritesProps {
 const Favorites: React.FC<FavoritesProps> = ({ onNavigateBack, favoriteEvents, toggleFavorite, onEventClick, onNavigateToSchedule }) => {
   // Calendar dates from Nov 17-22
   const calendarDates = [
-    { day: 'MON', date: 'NOV 17', fullDate: 'Monday, November 17' },
-    { day: 'TUE', date: 'NOV 18', fullDate: 'Tuesday, November 18' },
-    { day: 'WED', date: 'NOV 19', fullDate: 'Wednesday, November 19' },
-    { day: 'THU', date: 'NOV 20', fullDate: 'Thursday, November 20' },
-    { day: 'FRI', date: 'NOV 21', fullDate: 'Friday, November 21' },
-    { day: 'SAT', date: 'NOV 22', fullDate: 'Saturday, November 22' },
-    { day: 'SUN', date: 'NOV 23', fullDate: 'Sunday, November 23' }
+    { day: 'MON', date: 'NOV 17', fullDate: 'Monday, Nov 17' },
+    { day: 'TUE', date: 'NOV 18', fullDate: 'Tuesday, Nov 18' },
+    { day: 'WED', date: 'NOV 19', fullDate: 'Wednesday, Nov 19' },
+    { day: 'THU', date: 'NOV 20', fullDate: 'Thursday, Nov 20' },
+    { day: 'FRI', date: 'NOV 21', fullDate: 'Friday, Nov 21' },
+    { day: 'SAT', date: 'NOV 22', fullDate: 'Saturday, Nov 22' },
+    { day: 'SUN', date: 'NOV 23', fullDate: 'Sunday, Nov 23' }
   ]
 
   // Same event data as Schedule component
@@ -638,22 +638,24 @@ const Favorites: React.FC<FavoritesProps> = ({ onNavigateBack, favoriteEvents, t
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {onNavigateBack && (
-              <Button variant="ghost" size="sm" onClick={onNavigateBack}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold">Favorites</h1>
-              <p className="text-sm text-muted-foreground">
-                {totalFavorites === 0 ? 'No favorite events yet' : `${totalFavorites} favorite event${totalFavorites === 1 ? '' : 's'}`}
-              </p>
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+        <div className="p-4">
+                      <div className="flex items-center gap-3">
+              {onNavigateBack && (
+                <button
+                  onClick={onNavigateBack}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-xl font-bold">Favorites</h1>
+                <p className="text-white/90 text-sm">
+                  {totalFavorites === 0 ? 'No favorite events yet' : `${totalFavorites} favorite event${totalFavorites === 1 ? '' : 's'}`}
+                </p>
+              </div>
             </div>
-          </div>
-          <Heart className="h-6 w-6 text-red-500 fill-current" />
         </div>
       </div>
 
@@ -666,12 +668,11 @@ const Favorites: React.FC<FavoritesProps> = ({ onNavigateBack, favoriteEvents, t
               className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="text-center">
-                  <div className="text-xs font-medium text-gray-600">{day.day}</div>
-                  <div className="text-sm font-bold">{day.date}</div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-left">
+                  <h3 className="font-semibold" style={{ color: '#242436', fontSize: '16px' }}>
+                    {day.fullDate}
+                  </h3>
+                  <p className="text-sm text-muted-foreground text-left">
                     {day.events.length === 0 
                       ? 'No favorite events' 
                       : `${day.events.length} favorite event${day.events.length === 1 ? '' : 's'}`

@@ -271,6 +271,119 @@ router.post('/connect', authenticateToken, (req: AuthRequest, res) => {
   }
 })
 
+// POST /api/wallet/send - Send transaction (mock)
+router.post('/send', authenticateToken, (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!
+    const { recipientAddress, amount, token = 'ETH', gasPrice = 'standard' } = req.body
+    
+    if (!recipientAddress || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Recipient address and amount are required'
+      } as ApiResponse)
+    }
+
+    if (!/^0x[a-fA-F0-9]{40}$/.test(recipientAddress)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid recipient address format'
+      } as ApiResponse)
+    }
+
+    let wallet = dataStore.getUserWallet(userId)
+    
+    if (!wallet) {
+      const user = req.user
+      if (!user?.walletAddress) {
+        return res.status(400).json({
+          success: false,
+          error: 'No wallet connected'
+        } as ApiResponse)
+      }
+      wallet = dataStore.createUserWallet(userId, user.walletAddress)
+    }
+
+    // Check balance (simplified check)
+    const sendAmount = parseFloat(amount)
+    if (token === 'ETH' && wallet.balance.eth < sendAmount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Insufficient ETH balance'
+      } as ApiResponse)
+    }
+
+    // Create send transaction
+    const transaction = {
+      id: uuidv4(),
+      hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      type: 'transfer' as const,
+      amount: -sendAmount, // Negative for send
+      token,
+      status: 'confirmed' as const,
+      timestamp: new Date(),
+      description: `Sent ${sendAmount} ${token} to ${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)}`
+    }
+
+    // Add transaction and update balance
+    wallet.transactions.push(transaction)
+    if (token === 'ETH') {
+      wallet.balance.eth -= sendAmount
+    }
+
+    res.json({
+      success: true,
+      data: {
+        transaction,
+        newBalance: wallet.balance
+      },
+      message: `Successfully sent ${sendAmount} ${token}`
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Send transaction error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
+// GET /api/wallet/receive-address - Get wallet receive address
+router.get('/receive-address', authenticateToken, (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!
+    let wallet = dataStore.getUserWallet(userId)
+    
+    if (!wallet) {
+      const user = req.user
+      if (!user?.walletAddress) {
+        return res.status(400).json({
+          success: false,
+          error: 'No wallet connected'
+        } as ApiResponse)
+      }
+      wallet = dataStore.createUserWallet(userId, user.walletAddress)
+    }
+
+    res.json({
+      success: true,
+      data: {
+        address: wallet.address,
+        network: 'Ethereum',
+        chainId: 1
+      }
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Get receive address error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
 // GET /api/wallet/stats - Get wallet statistics
 router.get('/stats', authenticateToken, (req: AuthRequest, res) => {
   try {

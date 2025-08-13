@@ -30,12 +30,25 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 
+interface UserEvent {
+  id: number;
+  time: string;
+  title: string;
+  location: string;
+  status: string;
+  type: string;
+  description: string;
+  qrCode: string;
+  organizer: string;
+}
+
 interface WalletProps {
   onNavigateToSchedule?: () => void;
   initialActiveSection?: 'profile' | 'wallet' | 'tickets' | 'collections' | 'settings';
+  userEvents?: UserEvent[];
 }
 
-const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialActiveSection }) => {
+const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialActiveSection, userEvents = [] }) => {
   const [showBalance, setShowBalance] = useState(true)
   const [activeSection, setActiveSection] = useState<'profile' | 'wallet' | 'tickets' | 'collections' | 'settings'>(initialActiveSection || 'wallet')
   const [qrModalOpen, setQrModalOpen] = useState(false)
@@ -818,6 +831,54 @@ const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialA
     )
   }
 
+  // Function to transform userEvents into wallet ticket format
+  const transformUserEventsToTickets = (events: UserEvent[]) => {
+    // Create a map to organize events by day
+    const eventsByDay: { [key: string]: any[] } = {}
+    
+    // Days mapping (you might want to make this more dynamic based on actual dates)
+    const dayMapping: { [key: string]: string } = {
+      'Monday': 'Monday 17 Nov',
+      'Tuesday': 'Tuesday 18 Nov', 
+      'Wednesday': 'Wednesday 19 Nov',
+      'Thursday': 'Thursday 20 Nov',
+      'Friday': 'Friday 21 Nov',
+      'Saturday': 'Saturday 22 Nov'
+    }
+    
+    events.forEach(event => {
+      // Transform the event to match wallet ticket format
+      const transformedEvent = {
+        id: event.id,
+        name: event.title, // title -> name
+        time: event.time,
+        location: event.location,
+        description: event.description,
+        organizer: event.organizer,
+        type: event.type === 'core' ? 'Core' : event.type === 'partner' ? 'Partner' : 'Core', // Normalize type casing
+        qrCode: event.qrCode
+      }
+      
+      // For now, put all events in Monday since we don't have day info in userEvents
+      // In a real app, you'd parse the date or have day info in the event data
+      const dayKey = 'Monday 17 Nov'
+      if (!eventsByDay[dayKey]) {
+        eventsByDay[dayKey] = []
+      }
+      eventsByDay[dayKey].push(transformedEvent)
+    })
+    
+    // Add empty arrays for other days to maintain the structure
+    const allDays = ['Monday 17 Nov', 'Tuesday 18 Nov', 'Wednesday 19 Nov', 'Thursday 20 Nov', 'Friday 21 Nov', 'Saturday 22 Nov']
+    allDays.forEach(day => {
+      if (!eventsByDay[day]) {
+        eventsByDay[day] = []
+      }
+    })
+    
+    return eventsByDay
+  }
+
   // Tickets Section Component  
   const TicketsSection = () => {
     const [expandedDays, setExpandedDays] = useState<string[]>([])
@@ -856,99 +917,17 @@ const WalletComponent: React.FC<WalletProps> = ({ onNavigateToSchedule, initialA
       })
     }
 
-    // Event data organized by days - matching actual calendar events
-    const eventsByDay = {
-      'Monday 17 Nov': [
-        {
-          id: 3,
-          name: 'Opening Ceremony',
-          time: '9:00 AM - 10:00 AM',
-          location: 'Main Stage',
-          description: 'Kick-off presentation with keynote speakers',
-          organizer: 'EF TEAM',
-          type: 'Core',
-          qrCode: 'QR-OPENING-CEREMONY-001'
-        },
-        {
-          id: 2,
-          name: 'Ethereum Day',
-          time: '10:00 AM - 6:00 PM',
-          location: 'La Rural',
-          description: 'The main Ethereum Foundation presentation day with core protocol updates',
-          organizer: 'ETHEREUM FOUNDATION',
-          type: 'Core',
-          qrCode: 'QR-ETHEREUM-DAY-002'
-        },
-        {
-          id: 4,
-          name: 'DeFi Workshop Series',
-          time: '2:00 PM - 5:00 PM',
-          location: 'Workshop Hall',
-          description: 'Deep dive into DeFi protocols and development',
-          organizer: 'AAVE TEAM',
-          type: 'Partner',
-          qrCode: 'QR-DEFI-WORKSHOP-003'
+    // Use transformed userEvents data or fallback to empty structure
+    const eventsByDay = userEvents.length > 0 
+      ? transformUserEventsToTickets(userEvents)
+      : {
+          'Monday 17 Nov': [],
+          'Tuesday 18 Nov': [],
+          'Wednesday 19 Nov': [],
+          'Thursday 20 Nov': [],
+          'Friday 21 Nov': [],
+          'Saturday 22 Nov': []
         }
-      ],
-      'Tuesday 18 Nov': [
-        {
-          id: 8,
-          name: 'Layer 2 Summit',
-          time: '1:00 PM - 6:00 PM',
-          location: 'Summit Hall',
-          description: 'Comprehensive coverage of Layer 2 scaling solutions',
-          organizer: 'POLYGON TEAM',
-          type: 'Partner',
-          qrCode: 'QR-LAYER2-SUMMIT-004'
-        },
-        {
-          id: 7,
-          name: 'NFT Art Gallery',
-          time: '11:00 AM - 7:00 PM',
-          location: 'Gallery Space',
-          description: 'Digital art exhibitions and NFT showcases',
-          organizer: 'ART COLLECTIVE',
-          type: 'Partner',
-          qrCode: 'QR-NFT-GALLERY-005'
-        }
-      ],
-      'Wednesday 19 Nov': [
-        {
-          id: 5,
-          name: 'ETHCon Day Argentina',
-          time: '10:00 AM - 6:00 PM',
-          location: 'La Rural',
-          description: 'Local Ethereum community presentations and networking',
-          organizer: 'DEVCONNECT TEAM',
-          type: 'Core',
-          qrCode: 'QR-ETHCON-ARG-006'
-        },
-        {
-          id: 6,
-          name: 'zkTLS Deep Dive',
-          time: '9:30 AM - 3:00 PM',
-          location: 'Tech Pavilion',
-          description: 'Technical workshop on zero-knowledge Transport Layer Security',
-          organizer: 'EF TEAM',
-          type: 'Core',
-          qrCode: 'QR-ZKTLS-DIVE-007'
-        }
-      ],
-      'Thursday 20 Nov': [],
-      'Friday 21 Nov': [],
-      'Saturday 22 Nov': [
-        {
-          id: 14,
-          name: 'Closing Ceremony',
-          time: '4:00 PM - 6:00 PM',
-          location: 'Main Stage',
-          description: 'Final presentations and wrap-up celebration',
-          organizer: 'EF TEAM',
-          type: 'Core',
-          qrCode: 'QR-CLOSING-CEREMONY-013'
-        }
-      ]
-    }
 
     return (
       <div className="space-y-6">

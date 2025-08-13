@@ -45,11 +45,11 @@ const ExperienceLevel: React.FC<ExperienceLevelProps> = ({ onComplete, stepInfo,
         <div className="p-4 pb-24">
           <div className="w-full max-w-3xl mx-auto">
             {/* Header */}
-            <div className="text-center mb-6">
+            <div className="text-left mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Let's get your app set up!
+                How familiar are you with Ethereum?
               </h1>
-              <p className="text-base text-gray-600 max-w-xl mx-auto">
+              <p className="text-base text-gray-600">
                 Select your experience level below to personalize your World's Fair app:
               </p>
             </div>

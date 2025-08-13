@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, Calendar, Users, Heart, Map, DollarSign, Cpu, Microscope } from 'lucide-react'
+import { MapPin, Calendar, Users, Heart, Map, DollarSign, Cpu, Microscope, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,9 +14,10 @@ interface FairProps {
 
 const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites, onEventClick, onNavigateToMap, onNavigateToMapWithDistrict }) => {
   const eventInfo = [
-    { icon: Calendar, label: "Nov 17–22, 2025", subtitle: "6 Days" },
-    { icon: MapPin, label: "Buenos Aires, Argentina", subtitle: "+ Virtual" },
-    { icon: Users, label: "15,000+ Attendees", subtitle: "Worldwide" }
+    { icon: Calendar, label: "Nov 17–22, 2025", subtitle: "Devconnect week" },
+    { icon: MapPin, label: "La Rural", subtitle: "+ across Buenos Aires" },
+    { icon: Users, label: "15,000+ attendees", subtitle: "from around the world" },
+    { icon: Smartphone, label: "60+ Ethereum apps", subtitle: "at the App Showcase" }
   ]
 
   // Event data from Schedule component
@@ -162,24 +163,6 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Event Info Header - Auto-scrolling */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 overflow-hidden relative">
-        <div className="flex gap-8 animate-scroll whitespace-nowrap">
-          {/* Triple the items for seamless infinite loop */}
-          {[...eventInfo, ...eventInfo, ...eventInfo].map((info, index) => (
-            <div key={index} className="flex items-center gap-3 flex-shrink-0 px-6">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <info.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{info.label}</p>
-                <p className="text-xs text-white/80">{info.subtitle}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Hero Section */}
       <div className="relative h-[200px] w-full">
         <div 
@@ -195,6 +178,24 @@ const Fair: React.FC<FairProps> = ({ onNavigateToSchedule, onNavigateToFavorites
               Discover the world built on Ethereum
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Event Info Header - Auto-scrolling */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 overflow-hidden relative">
+        <div className="flex gap-8 animate-scroll whitespace-nowrap">
+          {/* Triple the items for seamless infinite loop */}
+          {[...eventInfo, ...eventInfo, ...eventInfo].map((info, index) => (
+            <div key={index} className="flex items-center gap-3 flex-shrink-0 px-6">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <info.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{info.label}</p>
+                <p className="text-xs text-white/80">{info.subtitle}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

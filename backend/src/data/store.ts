@@ -345,8 +345,9 @@ class DataStore {
     const demoUser: User = {
       id: 'demo-user-123',
       email: 'demo@devconnect.org',
-      name: 'Demo User',
-      displayName: 'demo.eth',
+      name: 'Alex Thompson',
+      displayName: 'alextee.eth',
+      walletAddress: '0x742d35Cc6b1D4A7d8C8e5A9c',
       authMethod: 'email',
       experienceLevel: 'experienced',
       ticketVerified: true,
@@ -356,6 +357,68 @@ class DataStore {
       updatedAt: new Date()
     }
     this.users.set(demoUser.id, demoUser)
+
+    // Initialize demo user wallet with sample transactions
+    const demoWallet: UserWallet = {
+      userId: 'demo-user-123',
+      address: '0x742d35Cc6b1D4A7d8C8e5A9c',
+      balance: {
+        eth: 1.247,
+        tokens: [
+          { symbol: 'USDC', name: 'USD Coin', balance: 355.33, decimals: 6, contractAddress: '0xA0b86a33E6...' },
+          { symbol: 'USDT', name: 'Tether USD', balance: 89.47, decimals: 6, contractAddress: '0xdAC17f958D...' }
+        ]
+      },
+      nfts: [
+        {
+          contractAddress: '0x123...',
+          name: 'DevConnect POAPs',
+          symbol: 'POAP',
+          tokens: [
+            {
+              tokenId: '1',
+              name: 'Opening Ceremony POAP',
+              description: 'Attended DevConnect Opening Ceremony',
+              image: 'https://images.unsplash.com/photo-1558618047-fd930336c4c0?w=80&h=80&auto=format&fit=crop',
+              attributes: [{ trait_type: 'Event', value: 'Opening Ceremony' }]
+            }
+          ]
+        }
+      ],
+      transactions: [
+        {
+          id: uuidv4(),
+          hash: '0x1234567890abcdef...',
+          type: 'quest_reward',
+          amount: 0.05,
+          token: 'ETH',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          description: 'Quest reward: Welcome to DevConnect'
+        },
+        {
+          id: uuidv4(),
+          hash: '0xabcdef1234567890...',
+          type: 'event_payment',
+          amount: -12.50,
+          token: 'USDC',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+          description: 'Payment to Coffee Shop'
+        },
+        {
+          id: uuidv4(),
+          hash: '0x567890abcdef1234...',
+          type: 'event_payment',
+          amount: -8.75,
+          token: 'USDT',
+          status: 'confirmed',
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+          description: 'Payment to Food Truck'
+        }
+      ]
+    }
+    this.userWallets.set('demo-user-123', demoWallet)
 
     // Initialize sample user registrations for demo
     // In a real app, this would be done through user actions

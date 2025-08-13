@@ -178,11 +178,120 @@ router.put('/profile', authenticateToken, validateBody(updateProfileSchema), (re
   }
 })
 
+// POST /api/auth/send-otp - Send OTP to email
+router.post('/send-otp', (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email address'
+      } as ApiResponse)
+    }
+
+    // In a real app, this would send an actual OTP via email service
+    // For demo, we'll simulate sending OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    console.log(`OTP for ${email}: ${otpCode}`) // In production, this would be sent via email
+
+    res.json({
+      success: true,
+      message: 'OTP sent successfully',
+      data: {
+        email,
+        // In production, don't send the actual OTP in response
+        otp: otpCode // Only for demo purposes
+      }
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Send OTP error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
+// POST /api/auth/verify-otp - Verify OTP
+router.post('/verify-otp', (req, res) => {
+  try {
+    const { email, otp } = req.body
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and OTP are required'
+      } as ApiResponse)
+    }
+
+    // In a real app, this would verify against stored OTP
+    // For demo, we'll accept any 6-digit code
+    if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid OTP format'
+      } as ApiResponse)
+    }
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully',
+      data: {
+        email,
+        verified: true
+      }
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Verify OTP error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
+// POST /api/auth/create-wallet - Create new wallet for user
+router.post('/create-wallet', (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
+      } as ApiResponse)
+    }
+
+    // Generate a mock wallet address
+    const walletAddress = `0x${Math.random().toString(16).substr(2, 40)}`
+    
+    // In a real app, this would create an actual wallet
+    res.json({
+      success: true,
+      message: 'Wallet created successfully',
+      data: {
+        walletAddress,
+        created: true
+      }
+    } as ApiResponse)
+
+  } catch (error) {
+    console.error('Create wallet error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    } as ApiResponse)
+  }
+})
+
 // POST /api/auth/verify-ticket - Verify user ticket
 router.post('/verify-ticket', authenticateToken, (req: AuthRequest, res) => {
   try {
     const userId = req.userId!
-    const { method } = req.body // 'zupass' or 'email'
+    const { method, email } = req.body // 'zupass' or 'email', email for verification
 
     if (!method || !['zupass', 'email'].includes(method)) {
       return res.status(400).json({
@@ -191,7 +300,7 @@ router.post('/verify-ticket', authenticateToken, (req: AuthRequest, res) => {
       } as ApiResponse)
     }
 
-    // In a real app, this would verify with Zupass or send email verification
+    // In a real app, this would verify with Zupass or check email against registration records
     // For now, we'll simulate successful verification
     if (!req.user) {
       return res.status(404).json({
@@ -217,7 +326,8 @@ router.post('/verify-ticket', authenticateToken, (req: AuthRequest, res) => {
       success: true,
       data: {
         verified: true,
-        method
+        method,
+        email: method === 'email' ? email : undefined
       },
       message: 'Ticket verified successfully'
     } as ApiResponse)

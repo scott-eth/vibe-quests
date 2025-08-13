@@ -104,6 +104,56 @@ Update user profile (requires authentication).
 }
 ```
 
+### POST /api/auth/send-otp
+Send OTP code to email address.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "OTP sent successfully"
+}
+```
+
+### POST /api/auth/verify-otp
+Verify OTP code and create/login user.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": { /* user object */ },
+    "token": "jwt-token"
+  }
+}
+```
+
+### POST /api/auth/create-wallet
+Create new wallet for authenticated user.
+
+**Request Body:**
+```json
+{
+  "walletType": "metamask" | "walletconnect" | "coinbase"
+}
+```
+
 ### POST /api/auth/verify-ticket
 Verify user's event ticket (requires authentication).
 
@@ -217,6 +267,18 @@ Update quest progress (requires authentication).
 }
 ```
 
+### POST /api/quests/:id/verify
+Verify quest completion manually (requires authentication).
+
+**Request Body:**
+```json
+{
+  "verificationData": {
+    "proof": "verification proof or data"
+  }
+}
+```
+
 ### POST /api/quests/:id/claim
 Claim quest rewards (requires authentication).
 
@@ -305,8 +367,98 @@ Connect a new wallet address (requires authentication).
 }
 ```
 
+### POST /api/wallet/send
+Send cryptocurrency transaction (mock implementation, requires authentication).
+
+**Request Body:**
+```json
+{
+  "to": "0x742d35Cc...",
+  "amount": "0.1",
+  "token": "ETH",
+  "gasPrice": "20"
+}
+```
+
+### GET /api/wallet/receive-address
+Get wallet receive address (requires authentication).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "address": "0x742d35Cc...",
+    "qrCode": "data:image/png;base64,..."
+  }
+}
+```
+
 ### GET /api/wallet/stats
 Get wallet statistics (requires authentication).
+
+---
+
+## Collections Endpoints
+
+### GET /api/collections
+Get all user collections (POAPs, NFTs, Swag, Vouchers) - requires authentication.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "poap-1",
+      "name": "DevConnect Opening Ceremony",
+      "description": "Attended the opening ceremony",
+      "image": "https://images.unsplash.com/...",
+      "type": "poap",
+      "acquiredAt": "2024-11-11T09:00:00Z"
+    }
+  ]
+}
+```
+
+### GET /api/collections/:type
+Get collections by specific type (requires authentication).
+
+**Parameters:**
+- `type`: One of `poap`, `nft`, `swag`, `voucher`
+
+### POST /api/collections
+Add new collection item (requires authentication).
+
+**Request Body:**
+```json
+{
+  "name": "Collection Item Name",
+  "description": "Description",
+  "image": "https://image-url.com",
+  "type": "poap",
+  "metadata": {}
+}
+```
+
+### GET /api/collections/user/stats
+Get collection statistics (requires authentication).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 15,
+    "byType": {
+      "poap": 8,
+      "nft": 3,
+      "swag": 2,
+      "voucher": 2
+    }
+  }
+}
+```
 
 ---
 

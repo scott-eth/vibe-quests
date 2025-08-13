@@ -27,18 +27,20 @@ import EventModal from '@/components/EventModal'
 
 // Onboarding Components
 import AuthScreen from '@/components/onboarding/AuthScreen'
+import OTPScreen from '@/components/onboarding/OTPScreen'
+import WalletChoiceScreen from '@/components/onboarding/WalletChoiceScreen'
 import EventOverview from '@/components/onboarding/EventOverview'
 import ExperienceLevel from '@/components/onboarding/ExperienceLevel'
-import TicketVerification from '@/components/onboarding/TicketVerification'
+import TicketVerification from '@/components/onboarding/TicketVerification' // Updated with userEmail prop
 
 // Types for onboarding flow
-type OnboardingStep = 'auth' | 'event-overview' | 'experience-level' | 'ticket-verification' | 'complete'
+type OnboardingStep = 'email' | 'otp' | 'wallet-choice' | 'event-overview' | 'experience-level' | 'ticket-verification' | 'complete'
 type ExperienceLevel = 'beginner' | 'experienced'
-type AuthMethod = 'email' | 'wallet'
+type WalletChoice = 'create' | 'connect'
 
 interface UserProfile {
-  authMethod: AuthMethod
-  email?: string
+  email: string
+  walletChoice: WalletChoice
   walletAddress?: string
   experienceLevel: ExperienceLevel
   ticketVerified: boolean
@@ -48,7 +50,8 @@ interface UserProfile {
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'quests' | 'fair' | 'wallet' | 'schedule' | 'favorites' | 'map'>('home')
-  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth')
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('email')
+  const [userEmail, setUserEmail] = useState<string>('')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
   const [favoriteEvents, setFavoriteEvents] = useState<Set<number>>(new Set())
@@ -196,13 +199,23 @@ function App() {
   }
 
   // Onboarding handlers
-  const handleAuthComplete = (method: AuthMethod, data: { email?: string; address?: string }) => {
+  const handleEmailComplete = (email: string) => {
+    setUserEmail(email)
+    setOnboardingStep('otp')
+  }
+
+  const handleOTPComplete = () => {
+    setOnboardingStep('wallet-choice')
+  }
+
+  const handleWalletChoiceComplete = (choice: WalletChoice, data?: { address?: string }) => {
     setUserProfile({
-      authMethod: method,
-      email: data.email,
-      walletAddress: data.address,
-      experienceLevel: 'beginner', // default, will be updated
-      ticketVerified: false
+      email: userEmail,
+      walletChoice: choice,
+      walletAddress: data?.address,
+      experienceLevel: 'beginner', // default, will be updated in app setup
+      ticketVerified: false,
+      name: userEmail ? userEmail.split('@')[0] : 'User'
     })
     setOnboardingStep('event-overview')
   }
@@ -220,8 +233,7 @@ function App() {
     setUserProfile(prev => prev ? { 
       ...prev, 
       ticketVerified: verified,
-      ticketVerificationMethod: method,
-      name: prev.email ? prev.email.split('@')[0] : 'User' // Extract name from email or default
+      ticketVerificationMethod: method
     } : prev)
     setIsOnboardingComplete(true)
   }
@@ -237,8 +249,14 @@ function App() {
 
   const handleBackStep = () => {
     switch (onboardingStep) {
+      case 'otp':
+        setOnboardingStep('email')
+        break
+      case 'wallet-choice':
+        setOnboardingStep('otp')
+        break
       case 'event-overview':
-        setOnboardingStep('auth')
+        setOnboardingStep('wallet-choice')
         break
       case 'experience-level':
         setOnboardingStep('event-overview')
@@ -266,6 +284,17 @@ function App() {
 
   // User's today events - fetched from backend
   const [userSignedUpEvents, setUserSignedUpEvents] = useState([
+    { 
+      id: 3,
+      time: "09:00–10:00", 
+      title: "Opening Ceremony", 
+      location: "MAIN STAGE", 
+      status: "registered", 
+      type: "core",
+      description: "Opening ceremony presentation for all attendees",
+      qrCode: "QR-OPENING-CEREMONY-001",
+      organizer: "EF TEAM"
+    },
     { 
       id: 1,
       time: "6:00 PM", 
@@ -688,13 +717,15 @@ function App() {
   // Get step info for progress tracking
   const getStepInfo = () => {
     const stepMap: Record<OnboardingStep, { step: number; title: string; canGoBack: boolean }> = {
-      'auth': { step: 1, title: 'Welcome', canGoBack: false },
+      'email': { step: 1, title: 'Welcome', canGoBack: false },
+      'otp': { step: 1, title: 'Verify Email', canGoBack: true },
+      'wallet-choice': { step: 1, title: 'Setup Wallet', canGoBack: true },
       'event-overview': { step: 1, title: 'Event Overview', canGoBack: true },
       'experience-level': { step: 2, title: 'Experience Level', canGoBack: true },
       'ticket-verification': { step: 3, title: 'Verify Ticket', canGoBack: true },
       'complete': { step: 4, title: 'Complete', canGoBack: false }
     }
-    return stepMap[onboardingStep] || stepMap['auth']
+    return stepMap[onboardingStep] || stepMap['email']
   }
 
   // Render onboarding step
@@ -702,10 +733,20 @@ function App() {
     const stepInfo = getStepInfo()
     
     switch (onboardingStep) {
-      case 'auth':
+      case 'email':
         return <AuthScreen 
-          onComplete={handleAuthComplete} 
+          onComplete={handleEmailComplete} 
           onSkip={handleSkipToApp}
+        />
+      case 'otp':
+        return <OTPScreen 
+          email={userEmail}
+          onComplete={handleOTPComplete}
+          onBack={handleBackStep}
+        />
+      case 'wallet-choice':
+        return <WalletChoiceScreen 
+          onComplete={handleWalletChoiceComplete}
         />
       case 'event-overview':
         return <EventOverview 
@@ -725,10 +766,11 @@ function App() {
           onSkip={() => setIsOnboardingComplete(true)}
           stepInfo={{ ...stepInfo, totalSteps: 3 }}
           onBack={handleBackStep}
+          userEmail={userEmail}
         />
       default:
         return <AuthScreen 
-          onComplete={handleAuthComplete} 
+          onComplete={handleEmailComplete} 
           onSkip={handleSkipToApp}
         />
     }
@@ -768,6 +810,7 @@ function App() {
         return <WalletComponent 
           onNavigateToSchedule={() => setCurrentPage('schedule')} 
           initialActiveSection={walletActiveSection}
+          userEvents={userSignedUpEvents}
         />
       case 'map':
         return <EventMap 
